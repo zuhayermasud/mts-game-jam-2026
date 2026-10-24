@@ -1,0 +1,11 @@
+# Godot cache and builds
+.godot/
+export/
+build/
+*.tmp
+
+# Local tool state
+.atlas/
+
+# macOS
+.DS_Store

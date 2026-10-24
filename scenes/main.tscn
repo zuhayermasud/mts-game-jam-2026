@@ -1,0 +1,115 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/art_sprite.gd" id="2_art"]
+[ext_resource type="PackedScene" path="res://scenes/patient.tscn" id="3_patient"]
+[ext_resource type="PackedScene" path="res://scenes/pot.tscn" id="4_pot"]
+[ext_resource type="PackedScene" path="res://scenes/critter.tscn" id="5_critter"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="Background" type="Node2D" parent="."]
+position = Vector2(360, 450)
+script = ExtResource("2_art")
+art_name = "background"
+size = Vector2(720, 900)
+shape = 0
+placeholder_color = Color(0.17, 0.14, 0.24, 1)
+
+[node name="Patient" parent="." instance=ExtResource("3_patient")]
+position = Vector2(360, 320)
+
+[node name="Counter" type="Node2D" parent="."]
+position = Vector2(360, 685)
+script = ExtResource("2_art")
+art_name = "counter"
+size = Vector2(720, 430)
+shape = 0
+placeholder_color = Color(0.24, 0.31, 0.33, 1)
+
+[node name="Pot" parent="." instance=ExtResource("4_pot")]
+position = Vector2(360, 600)
+
+[node name="GiveButton" type="Button" parent="."]
+offset_left = 520.0
+offset_top = 560.0
+offset_right = 690.0
+offset_bottom = 640.0
+focus_mode = 0
+text = "GIVE"
+
+[node name="Critters" type="Node2D" parent="."]
+
+[node name="Red" parent="Critters" instance=ExtResource("5_critter")]
+position = Vector2(150, 835)
+kind = 1
+
+[node name="Yellow" parent="Critters" instance=ExtResource("5_critter")]
+position = Vector2(360, 835)
+kind = 2
+
+[node name="Blue" parent="Critters" instance=ExtResource("5_critter")]
+position = Vector2(570, 835)
+kind = 3
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Root" type="Control" parent="HUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="ShiftLabel" type="Label" parent="HUD/Root"]
+offset_left = 24.0
+offset_top = 16.0
+offset_right = 324.0
+offset_bottom = 60.0
+text = "Shift 1"
+
+[node name="ScoreLabel" type="Label" parent="HUD/Root"]
+offset_left = 396.0
+offset_top = 16.0
+offset_right = 696.0
+offset_bottom = 60.0
+text = "Score 0"
+horizontal_alignment = 2
+
+[node name="Toast" type="Label" parent="HUD/Root"]
+visible = false
+offset_top = 400.0
+offset_right = 720.0
+offset_bottom = 450.0
+theme_override_font_sizes/font_size = 36
+horizontal_alignment = 1
+
+[node name="GameOver" type="Panel" parent="HUD/Root"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Box" type="VBoxContainer" parent="HUD/Root/GameOver"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -200.0
+offset_right = 280.0
+offset_bottom = 200.0
+theme_override_constants/separation = 40
+alignment = 1
+
+[node name="Summary" type="Label" parent="HUD/Root/GameOver/Box"]
+theme_override_font_sizes/font_size = 36
+text = "You made it to Shift 1"
+horizontal_alignment = 1
+
+[node name="Retry" type="Button" parent="HUD/Root/GameOver/Box"]
+custom_minimum_size = Vector2(240, 80)
+size_flags_horizontal = 4
+focus_mode = 0
+text = "Retry"

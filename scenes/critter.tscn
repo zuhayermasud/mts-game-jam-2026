@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/critter.gd" id="1_critter"]
+[ext_resource type="Script" path="res://scripts/art_sprite.gd" id="2_art"]
+
+[node name="Critter" type="Node2D" node_paths=PackedStringArray("hit")]
+script = ExtResource("1_critter")
+hit = NodePath("Body")
+
+[node name="Body" type="Node2D" parent="."]
+script = ExtResource("2_art")
+art_name = "critter_red"
+size = Vector2(130, 115)
+shape = 2
