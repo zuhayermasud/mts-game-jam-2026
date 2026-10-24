@@ -14,7 +14,7 @@ Jam entry for MTS Game Jam 2026, theme **"Borrowed Time"**. The brief and judgin
 - Godot isn't installed on this machine yet. Install the standard Godot 4.x build, not .NET.
 
 ## Pitch
-An alien doctor runs a space clinic where anything can happen. Alien patients arrive with lifespan clocks ticking down. Up to three patients sit at once and all their clocks tick. You pour colours into the pot and **hold it to boil**. Boil it a moment and you get a weak potion, which buys a patient **+10 s of borrowed time**. Boil it longer for the perfect cure, but don't overdo it or it boils over. A patient who runs out of borrowed time comes back later, worse.
+A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking down. Up to three patients sit at once and all their clocks tick. You pour colours into the pot and **hold it to boil**. Boil it a moment and you get a weak potion, which buys a patient **+10 s of borrowed time**. Boil it longer for the perfect cure, but don't overdo it or it boils over. A patient who runs out of borrowed time comes back later, worse.
 
 ## Visual reference
 - Heavily inspired by **Miracle Merchant** (Tiny Touch Tales):
@@ -86,8 +86,8 @@ Clocks are longer than a one-at-a-time design would need because every seated cl
 All of these live in one config resource.
 
 ### Story
-- Light touch: "I'm an alien doctor, it's space, anything can happen."
-- Shift cards show one funny line each. Patients have silly space ailments (for example "Quantum hiccups") in their bubbles.
+- Light touch. The setting is undecided for now (the earlier alien sci-fi idea is shelved because the art would be too much work).
+- Shift cards show one funny line each. Patients have silly ailments, shown on their status cards.
 
 ### Screens and controls
 - **Mouse only**, left click (plus right-click as a dump shortcut). No dragging.
@@ -97,10 +97,10 @@ All of these live in one config resource.
 
 ## Art pipeline (user draws in Illustrator)
 - **Three levels of detail.** The static background gets the most detail. Hero objects (active patient, pot, critters) get medium detail with strong silhouettes. Repeated things and UI (bubbles, bottles, icons, buttons) stay simple and bold.
-- **Colour hierarchy.** Only gameplay objects use the 6 saturated potion colours. The background is a dark, desaturated palette (space-clinic purples and teal-greys).
+- **Colour hierarchy.** Only gameplay objects use the 6 saturated potion colours. The background is a dark, desaturated palette (muted purples and teal-greys).
 - **Export.** One 720×900 artboard, exported as **2× PNG**. Each moving part is its own file. Anything tinted in code is drawn white or greyscale.
 - **Naming.** Use snake_case, for example `patient_body_a.png`, `face_worried.png`, `critter_red.png`. Files go in `assets/` and replace grey-box placeholders with the same name.
-- **Aliens.** 2 body silhouettes + 1 boss body, plus one shared set of faces: calm, worried, critical, cured, dead.
+- **Patients.** 2 body silhouettes + 1 boss body, plus one shared set of faces: calm, worried, critical, cured, dead.
 - Outside assets are fine for fonts, filler icons and background props. Patients, critters and the pot are drawn by the user.
 
 ## Status and next step
@@ -112,5 +112,5 @@ All of these live in one config resource.
 
 ## Nice to have (only once the MVP is done)
 - Fancier overcooking effects (smoke, fire)
-- More alien species silhouettes
+- More patient body silhouettes
 - Patient-specific quirks (impatient, needs a double dose)

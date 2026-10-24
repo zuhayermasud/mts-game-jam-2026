@@ -13,7 +13,7 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] A one-page mockup of the game screen, before any final art.
 
 ## 1. Game screen
-- [ ] 🎨 Clinic background (alien interior, kept muted so patients and potions stand out)
+- [ ] 🎨 Clinic background (kept muted so patients and potions stand out)
 - [ ] 🎨 Counter or workbench
 - [ ] 🎨 Ingredient critters ×3 (red, yellow, blue blobs). Reuse the face set: idle, squeezed, sweating, cheering. Squash and squirt are ⚙️
 - [ ] 🎨 Hero pot + 🧪 liquid layer, and a burner or flame base under it
@@ -29,9 +29,9 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] 🎨 Colour icons ×6 (shape per colour, for colour-blind players)
 
 ## 2. Patients
-- [ ] 🎨 Alien body base ×2–3 silhouettes (🧪 skin tinted to the cure colour)
+- [ ] 🎨 Patient body base ×2–3 silhouettes (🧪 skin tinted to the cure colour)
 - [ ] 🎨 Faces: calm, worried, critical, cured (happy), dead
-- [ ] 🎨 Boss alien (bigger silhouette)
+- [ ] 🎨 Boss patient (bigger silhouette)
 - [ ] 🎨 "Came back worse" marker (a bandage or patch)
 - [ ] Top status card per chair (drawn in code for now): cure icon, ailment, clock bar, status line
 - [ ] ⚙️ Lifespan clock bar on the card (green, purple after a borrow, flashing red near 0)
