@@ -18,9 +18,9 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] 🎨 Ingredient critters ×3 (red, yellow, blue blobs). Reuse the face set: idle, squeezed, sweating, cheering. Squash and squirt are ⚙️
 - [ ] 🎨 Hero pot + 🧪 liquid layer, and a burner or flame base under it
 - [ ] ⚙️ Flame and bubbles
-- [ ] ⚙️ Brew progress ring with weak / perfect / overcooked zones
+- [ ] ⚙️ Heat ring with raw / weak / perfect zones (full circle = boils over)
 - [ ] Potion name label under the pot ("Green Potion · Perfect!")
-- [ ] 🎨 GIVE and BOTTLE buttons: normal, hover, pressed
+- [ ] 🎨 BOTTLE button: normal, hover, pressed (serving is clicking a patient)
 - [ ] 🎨 Shelf with 2 slots
 - [ ] 🎨 Bottle + 🧪 liquid. States: weak (cloudy), perfect (sparkle ⚙️)
 - [ ] 🎨 Sink built into the workbench
@@ -33,13 +33,14 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] 🎨 Faces: calm, worried, critical, cured (happy), dead
 - [ ] 🎨 Boss alien (bigger silhouette)
 - [ ] 🎨 "Came back worse" marker (a bandage or patch)
-- [ ] 🎨 Speech bubble showing the needed potion (two slots for bosses) and the ailment name
-- [ ] ⚙️ Lifespan clock (ring around the bubble, flashing red near 0)
+- [ ] Top status card per chair (drawn in code for now): cure icon, ailment, clock bar, status line
+- [ ] ⚙️ Lifespan clock bar on the card (green, purple after a borrow, flashing red near 0)
 - [ ] ⚙️ Walk in and out, bobbing, cure pop, death fade
 
 ## 3. HUD
 - [ ] Score
 - [ ] Shift number
+- [ ] 🧪 Heart icon for lives (×3)
 - [ ] Patients cured counter
 - [ ] 🎨 Custom cursor
 

@@ -129,14 +129,14 @@ func _process(delta: float) -> void:
 
 
 func _boil_over() -> void:
-	Sfx.play("brew_overcooked")
-	stop_boil()
+	Sfx.play("boil_over")
 	_clear()
 	_shake()
 	boiled_over.emit()
 
 
 func _clear() -> void:
+	stop_boil()
 	pours.clear()
 	heat = 0.0
 	_refresh()
@@ -153,11 +153,11 @@ func _refresh() -> void:
 	liquid.visible = true
 	var tint := Game.config.potion_color(potion())
 	liquid.self_modulate = tint.lightened(0.45) if _last_quality == Potion.Quality.RAW else tint
-	var name := Potion.display_name(potion())
+	var potion_name := Potion.display_name(potion())
 	match _last_quality:
-		Potion.Quality.RAW: label.text = "%s · Hold the pot to boil" % name
-		Potion.Quality.WEAK: label.text = "%s · Weak (buys time)" % name
-		Potion.Quality.PERFECT: label.text = "%s · Perfect!" % name
+		Potion.Quality.RAW: label.text = "%s · Hold the pot to boil" % potion_name
+		Potion.Quality.WEAK: label.text = "%s · Weak (buys time)" % potion_name
+		Potion.Quality.PERFECT: label.text = "%s · Perfect!" % potion_name
 
 
 func _draw() -> void:

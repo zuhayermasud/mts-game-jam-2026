@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://scenes/patient.tscn" id="3_patient"]
 [ext_resource type="PackedScene" path="res://scenes/pot.tscn" id="4_pot"]
 [ext_resource type="PackedScene" path="res://scenes/critter.tscn" id="5_critter"]
+[ext_resource type="PackedScene" path="res://scenes/patient_card.tscn" id="6_card"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
@@ -17,8 +18,16 @@ size = Vector2(720, 900)
 shape = 0
 placeholder_color = Color(0.17, 0.14, 0.24, 1)
 
-[node name="Patient" parent="." instance=ExtResource("3_patient")]
-position = Vector2(360, 320)
+[node name="Chairs" type="Node2D" parent="."]
+
+[node name="Left" parent="Chairs" instance=ExtResource("3_patient")]
+position = Vector2(130, 340)
+
+[node name="Middle" parent="Chairs" instance=ExtResource("3_patient")]
+position = Vector2(360, 340)
+
+[node name="Right" parent="Chairs" instance=ExtResource("3_patient")]
+position = Vector2(590, 340)
 
 [node name="Counter" type="Node2D" parent="."]
 position = Vector2(360, 685)
@@ -30,14 +39,6 @@ placeholder_color = Color(0.24, 0.31, 0.33, 1)
 
 [node name="Pot" parent="." instance=ExtResource("4_pot")]
 position = Vector2(360, 600)
-
-[node name="GiveButton" type="Button" parent="."]
-offset_left = 520.0
-offset_top = 560.0
-offset_right = 690.0
-offset_bottom = 640.0
-focus_mode = 0
-text = "GIVE"
 
 [node name="Critters" type="Node2D" parent="."]
 
@@ -62,19 +63,49 @@ anchor_bottom = 1.0
 mouse_filter = 2
 
 [node name="ShiftLabel" type="Label" parent="HUD/Root"]
-offset_left = 24.0
-offset_top = 16.0
-offset_right = 324.0
-offset_bottom = 60.0
+offset_left = 20.0
+offset_top = 6.0
+offset_right = 260.0
+offset_bottom = 46.0
 text = "Shift 1"
 
+[node name="Hearts" type="Control" parent="HUD/Root"]
+anchors_preset = 0
+offset_left = 360.0
+offset_top = 26.0
+offset_right = 360.0
+offset_bottom = 26.0
+mouse_filter = 2
+
 [node name="ScoreLabel" type="Label" parent="HUD/Root"]
-offset_left = 396.0
-offset_top = 16.0
-offset_right = 696.0
-offset_bottom = 60.0
+offset_left = 460.0
+offset_top = 6.0
+offset_right = 700.0
+offset_bottom = 46.0
 text = "Score 0"
 horizontal_alignment = 2
+
+[node name="Cards" type="Control" parent="HUD/Root"]
+anchors_preset = 0
+mouse_filter = 2
+
+[node name="Left" parent="HUD/Root/Cards" instance=ExtResource("6_card")]
+offset_left = 20.0
+offset_top = 52.0
+offset_right = 240.0
+offset_bottom = 172.0
+
+[node name="Middle" parent="HUD/Root/Cards" instance=ExtResource("6_card")]
+offset_left = 250.0
+offset_top = 52.0
+offset_right = 470.0
+offset_bottom = 172.0
+
+[node name="Right" parent="HUD/Root/Cards" instance=ExtResource("6_card")]
+offset_left = 480.0
+offset_top = 52.0
+offset_right = 700.0
+offset_bottom = 172.0
 
 [node name="Toast" type="Label" parent="HUD/Root"]
 visible = false

@@ -10,3 +10,14 @@ var body_art: String
 var borrowed := false
 ## Ran out of borrowed time once and came back worse. Hitting 0 again kills them.
 var bandaged := false
+
+
+func duplicate_info() -> PatientInfo:
+	var copy := PatientInfo.new()
+	copy.cure = cure
+	copy.clock = clock
+	copy.ailment = ailment
+	copy.body_art = body_art
+	copy.borrowed = borrowed
+	copy.bandaged = bandaged
+	return copy
