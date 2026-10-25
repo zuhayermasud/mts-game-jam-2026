@@ -16,11 +16,10 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] 🎨 Clinic background (kept muted so patients and potions stand out)
 - [ ] 🎨 Counter or workbench
 - [ ] 🎨 Ingredient critters ×3 (red, yellow, blue blobs). Reuse the face set: idle, squeezed, sweating, cheering. Squash and squirt are ⚙️
-- [ ] 🎨 Pot + 🧪 liquid layer, and a burner or flame base under it (one drawing, used for both pots)
-- [ ] 🎨 Burner ON/OFF switch (a theme `Button` for now; optional knob or lever art, with an "on" state)
-- [ ] ⚙️ Selected-pot highlight (ring and arrow)
+- [ ] 🎨 Pot + 🧪 liquid layer, and a burner or flame base under it
+- [ ] 🎨 Spoon (circles in the pot while stirring)
 - [ ] ⚙️ Flame and bubbles
-- [ ] ⚙️ Heat ring with raw / weak / perfect zones (full circle = boils over)
+- [ ] ⚙️ Stir ring: grey weak arc, moving gold band, red warning arc, needle (full circle = boils over)
 - [ ] Potion name label under the pot ("Green Potion · Perfect!")
 - [ ] 🎨 (on hold) BOTTLE button, shelf with 2 slots, bottle + 🧪 liquid
 - [ ] 🎨 Sink built into the workbench
@@ -63,7 +62,7 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] Hover scale-up on everything you can click
 
 ## 6. Audio
-- [ ] SFX: jar pour, flask clear, burner on, bubbling loop, perfect "ding", overcooked hiss, pull potion, give potion, cure jingle, weak-cure "meh", patient arrives, emergency alarm, clock warning tick, death, shift start, game over, button click
+- [ ] SFX: jar pour, flask clear, stir swish (repeats while holding), boil-over warning rattle, perfect "ding", overcooked hiss, pull potion, give potion, cure jingle, weak-cure "meh", patient arrives, emergency alarm, clock warning tick, death, shift start, game over, button click
 - [ ] Music: one loop that speeds up or gets more intense as danger rises
 - [ ] Theme cue: a distinct "borrowed time" sound when you give a weak potion
 

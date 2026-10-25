@@ -9,7 +9,7 @@ signal resolved(outcome: Outcome)
 signal gone
 
 enum Outcome { CURED, BANDAGED, DIED }
-enum Serve { CURED, BORROWED, REFUSED, ALREADY_BORROWED }
+enum Serve { CURED, BORROWED, REFUSED }
 
 var info: PatientInfo
 var time_left := 0.0
@@ -77,12 +77,8 @@ func serve(kind: int, quality: int) -> Serve:
 	if quality == Potion.Quality.PERFECT:
 		_resolve(Outcome.CURED)
 		return Serve.CURED
-	if info.borrowed:
-		Sfx.play("refuse")
-		_shake()
-		return Serve.ALREADY_BORROWED
-	info.borrowed = true
-	time_left += Game.config.borrow_seconds
+	info.borrows += 1
+	time_left += Game.config.borrow_for(info.borrows - 1)
 	clock_max = maxf(clock_max, time_left)
 	Sfx.play("borrow")
 	body.scale = Vector2(1.15, 0.9)
@@ -106,7 +102,7 @@ func _process(delta: float) -> void:
 	if time_left <= 0.0:
 		time_left = 0.0
 		# Out of borrowed time -> bandage and come back worse. Otherwise -> dead.
-		_resolve(Outcome.BANDAGED if info.borrowed and not info.bandaged else Outcome.DIED)
+		_resolve(Outcome.BANDAGED if info.has_borrowed() and not info.bandaged else Outcome.DIED)
 		return
 	if is_critical():
 		_set_face("face_critical")

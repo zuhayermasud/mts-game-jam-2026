@@ -23,6 +23,15 @@ size = Vector2(110, 36)
 shape = 2
 placeholder_color = Color(1, 1, 1, 1)
 
+[node name="Spoon" type="Node2D" parent="Body"]
+position = Vector2(30, -62)
+rotation = 0.3
+script = ExtResource("2_art")
+art_name = "spoon"
+size = Vector2(22, 110)
+shape = 1
+placeholder_color = Color(0.72, 0.55, 0.38, 1)
+
 [node name="Label" type="Label" parent="."]
 offset_left = -150.0
 offset_top = 96.0
@@ -31,12 +40,3 @@ offset_bottom = 124.0
 theme_override_font_sizes/font_size = 20
 text = "Squeeze a critter"
 horizontal_alignment = 1
-
-[node name="Burner" type="Button" parent="."]
-offset_left = -55.0
-offset_top = 126.0
-offset_right = 55.0
-offset_bottom = 170.0
-focus_mode = 0
-theme_override_font_sizes/font_size = 20
-text = "OFF"

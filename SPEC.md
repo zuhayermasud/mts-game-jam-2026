@@ -14,7 +14,7 @@ Jam entry for MTS Game Jam 2026, theme **"Borrowed Time"**. The brief and judgin
 - Godot isn't installed on this machine yet. Install the standard Godot 4.x build, not .NET.
 
 ## Pitch
-A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking down. Up to three patients sit at once and all their clocks tick. You juggle **two pots on burner switches**: pour colours in, switch the burner on, and the brew heats by itself while you deal with patients. Pull it early and you get a weak potion, which buys a patient **+10 s of borrowed time**. Let it boil longer for the perfect cure, but forget about it and it boils over. A patient who runs out of borrowed time comes back later, worse.
+A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking down. Up to three patients sit at once and all their clocks tick. You brew in **one pot**: pour colours in, then **hold the mouse on the pot to stir** and **let go inside a gold band** on the ring. The band rolls to a new spot every brew. Let go early or late and you get a weak potion, which buys a patient **borrowed time** (+10 s, then less each time: borrowing has interest). Hold too long and it boils over. A patient who runs out of borrowed time comes back later, worse.
 
 ## Visual reference
 - Heavily inspired by **Miracle Merchant** (Tiny Touch Tales):
@@ -32,33 +32,35 @@ A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking
 - **Up to 3 chairs, all clocks tick at once.** Chairs open per shift (1, then 2, then 3). Patients sit down one at a time, a short gap apart, whenever a chair is free.
 - **Click a patient to serve them** the brew in the pot. There is no GIVE button.
 - **A patient's skin colour is their cure.** Bandaged patients show their bandage.
-- **Top status bar:** one card per open chair, directly above it, showing the cure colour (icon and name), the ailment, a clock bar with seconds, and a status line (`Weak dose: +10s`, `EMERGENCY`, `Borrowed time`, `Bandaged · last chance`, then `Cured!` / `Back later, worse` / `Lost` as they leave). The bar is green, purple once they've borrowed, and flashes red under the critical threshold. A card's outline glows gold when either pot holds a servable brew that's that patient's cure, and is red for an emergency patient. Empty chairs say "Next patient…".
+- **Top status bar:** one card per open chair, directly above it, showing the cure colour (icon and name), the ailment, a clock bar with seconds, and a status line (`Weak dose: +10s`, `EMERGENCY`, `Borrowed ×N · next +Xs`, `Bandaged · next +Xs`, then `Cured!` / `Back later, worse` / `Lost` as they leave). The bar is green, purple once they've borrowed, and flashes red under the critical threshold. A card's outline glows gold when the pot holds a set brew that's that patient's cure, and is red for an emergency patient. Empty chairs say "Next patient…".
 - Tiers: **primary** (1 colour), **secondary** (2 primaries: orange, green, purple), **boss** (two potions served in order; the bubble shows both).
 - Each shift has a **finite, hidden list** of patients. The total is never shown, and the queue just shrinks at the end.
 
 ### Brewing
-- **Two pots** on the counter (left and right), each with an **ON/OFF burner switch** (a button under the pot).
-- **One pot is selected** (white ring and a small arrow). Click a pot's body to select it. Critters pour into the selected pot, and clicking a patient serves from it. The burner switches work without selecting.
+- **One pot** on the counter. Critters pour into it and clicking a patient serves from it.
 - **Ingredients are 3 living critters** (red, yellow, blue blobs) on the counter. Click one to squeeze it and it squirts its colour into the pot.
   - Fallback skins if the critters don't work: crystals or orbs, or plain potion bottles. The logic is identical, so only the art changes.
 - **Pours are instant.** The colour lands in the pot on the click. Squeeze and squirt animations are cosmetic and **never block input**, so you can click twice in quick succession.
-- **Burner ON:** heat rises by itself. **Burner OFF:** heat and quality freeze, so switching off "holds" a brew. **Pouring resets the heat** (the burner stays as it was).
-- Heat timeline (seconds with the burner on): **under 0.5 s raw** (can't be served), **0.5–3 s weak**, **3–5 s perfect**, **5 s boils over**: the pot empties itself, the burner switches off, with a shake and a "Boiled over!" toast. You lose the ingredients and the time, never the run. The 2 s perfect window is easy to catch if you're watching; the point is that you often aren't.
-- Why two pots and a switch: brews cook while your attention is on patients, so boil-overs come from pressure, and perfecting everyone is impossible, so weak doses become the way to stay afloat.
-- A ring around the pot fills with heat: raw, weak (grey), perfect (gold, glowing), and a full circle means it boils over. The pot wobbles and steams while the burner is on. The burner button turns orange when on. A label under the pot names the brew (for example "Green Potion · Perfect!").
+- **Hold to stir.** Hold the left mouse button on the pot: the spoon circles, the pot wobbles and steams, and a needle goes round the ring (heat = seconds of stirring, a full circle is 4 s). **Let go to set the brew.** Moving the mouse off the pot also lets go.
+- **The gold band (perfect)** starts somewhere between 1.4 s and 2.4 s, **rolled fresh on every pour**. It's 0.7 s wide for primaries and 0.5 s for secondaries, and narrows 0.03 s per shift (never under 0.35 s). It always ends before the warning zone.
+- Letting go **under 0.4 s** sets nothing: hold again. Letting go **before the band** gives a weak brew. **After the band** gives a weak brew marked *Overcooked*. A miss still buys time.
+- **Boil over:** the last 0.8 s of the ring is red. Entering it plays a warning sound, the pot rattles hard and the ring flashes red. At 4 s the pot empties with a shake and a "Boiled over!" toast. You lose the ingredients and the time, never the run.
+- **Pouring resets the brew** (even a set one) and re-rolls the band.
+- The ring shows a grey weak arc, the gold band, the red warning arc, and the fill plus a needle dot at the current heat. A label under the pot reads "Squeeze a critter", "Hold to stir", "Let go in the gold!" while stirring, then for example "Green Potion · Perfect!" / "· Weak" / "· Overcooked".
+- Why: a golf-meter timing skill on every brew (the band moves, so you have to watch), while every second you hold the pot is a second you're not watching the clocks.
 - Pour results: 1 pour = that primary. Same colour twice = that primary. Two different primaries = their secondary. A third pour is blocked, with a "full" sound.
 - Two actions when a brew is ready:
   - **Click a patient** to serve it to them.
   - **BOTTLE** pours it into a bottle on the **2-slot shelf** beside the pot. Bottling stops the cooking and freezes the quality. Bottles never decay.
 - Click a bottle on the shelf to serve it. This is how you brew ahead for waiting patients and bosses.
 - **Dumping:** right-click the pot or a bottle, or click the sink (no toolbar).
-- Bottles and the shelf are on hold now that there are two pots.
+- Bottles and the shelf are on hold.
 
 ### Borrowing time (the theme mechanic)
-1. Serving a **weak** potion gives that patient **+10 s**, and they stay in the chair. With several clocks running, a quick weak dose is how you stabilise one patient while you perfect another's cure. Borrowing also works as insurance: a patient who has borrowed doesn't die at 0, they get bandaged.
+1. Serving a **weak** potion gives that patient **borrowed time**, and they stay in the chair. With several clocks running, a quick weak dose is how you stabilise one patient while you perfect another's cure. Borrowing also works as insurance: a patient who has borrowed doesn't die at 0, they get bandaged.
 2. Cure them properly within that time and they leave happy, with no debt.
 3. If the time runs out, they **don't die**. They leave with a **bandage** and rejoin the queue later, one tier harder (primary → secondary → boss; a boss gets a shorter clock instead).
-4. **Borrow once per patient.** A second weak potion is refused and **stays in the pot** (nothing lost). A patient who never borrowed, or who is bandaged, **dies** at 0.
+4. **Borrowing has interest.** Every weak dose is accepted, but each buys less: **+10 s, then +6 s, then +3 s**, and +3 s after that (`borrow_steps`). The card shows the next loan. The count follows a bandaged patient back. A patient who never borrowed, or who is bandaged, **dies** at 0.
 - A weak potion given to a boss buys time but doesn't count toward their two potions.
 - No global debt meter. The cascade comes from bandaged patients filling up the queue.
 
@@ -85,11 +87,11 @@ A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking
 | 4 | 3 | 8 | 13 s | 30% | more secondaries, 2 bosses |
 | 5+ | 3 | +1 each | −1 s each (floor 10 s) | 30% | weighted to bosses |
 
-Patients sit down 1.5 s apart. Clocks are tight on purpose: perfecting every patient shouldn't be possible, so weak doses (+10 s) are how you stay afloat.
+Patients sit down 1.5 s apart. Clocks are tight on purpose: perfecting every patient shouldn't be possible, so weak doses (+10 s, then less) are how you stay afloat.
 
 ### Emergencies
 - Each patient in a shift has a chance (table above) to be an **emergency**: they arrive on a **7 s clock**, with a red card outline, an `EMERGENCY` status line, an "Emergency!" toast and the `emergency` sound.
-- 7 s is shorter than a perfect brew (3 s of heat plus pouring), so an emergency usually needs a weak dose first.
+- 7 s is tight for a perfect brew (up to ~3 s of stirring plus pouring), so an emergency usually needs a weak dose first.
 - If an emergency patient runs out of borrowed time, they come back bandaged on a normal clock (no longer an emergency).
 All of these live in one config resource.
 
@@ -98,7 +100,7 @@ All of these live in one config resource.
 - Shift cards show one funny line each. Patients have silly ailments, shown on their status cards.
 
 ### Screens and controls
-- **Mouse only**, left click (plus right-click as a dump shortcut). No dragging.
+- **Mouse only**, left click and hold-to-stir on the pot (plus right-click as a dump shortcut). No dragging.
 - Title screen: Play, Volume, Credits.
 - **Esc pauses the game.** The pause menu has music and SFX volume, Resume, and Quit to title.
 - Shift intro card: shift number, stars from the last shift, one flavour line.
@@ -115,7 +117,8 @@ All of these live in one config resource.
 - The design is complete as of 2026-10-23. The day-by-day checklist lives in the user's Obsidian note `2026 Mts Gamejam.md`.
 - **Done (2026-10-23):** the Godot 4 project and the grey-box core loop (critter pour → pot boil and quality ring → GIVE → active patient clock, borrow, bandage and rebook, death and game over, shifts and score). Numbers are in `config/game_config.tres`, and art swaps by file name (`assets/README.md`). Smoke test: `godot --headless res://tests/smoke_test.tscn`.
 - **Done (2026-10-24):** redesign: hold-to-boil pot with boil-over, 3 chairs whose clocks all tick, click a patient to serve, top status cards, 3 lives.
-- **Done (2026-10-24):** two pots on ON/OFF burner switches (click a pot to select it), longer perfect boil, tighter clocks, emergency patients. Waiting on a playtest of shifts 2–3: you should boil over at least once when busy and need weak doses.
+- **Done (2026-10-24):** two pots on ON/OFF burner switches (click a pot to select it), longer perfect boil, tighter clocks, emergency patients.
+- **Done (2026-10-25):** one pot again: hold to stir, let go in a gold band that moves every pour (narrower for secondaries), overcooked and boil-over warning, borrowing with interest (+10/+6/+3 s). Waiting on a playtest: the band should feel readable, early/late let-gos should land weak, and three chairs on shift 3 should be manageable with loans.
 - **Next:** sink, bosses, recipe poster and book, then title, pause and shift cards.
 - Audio is waiting on the user to choose a sound-generator project.
 

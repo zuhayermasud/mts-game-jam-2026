@@ -9,8 +9,9 @@ Drop a PNG here with one of these names and it replaces the grey-box placeholder
 |---|---|---|---|
 | `background.png` | 720×900 | 1440×1800 | |
 | `counter.png` | 720×430 | 1440×860 | |
-| `pot.png` (used by both pots) | 150×135 | 300×270 | |
+| `pot.png` | 150×135 | 300×270 | |
 | `pot_liquid.png` | 110×36 | 220×72 | yes |
+| `spoon.png` (handle up) | 22×110 | 44×220 | |
 | `critter_red.png`, `critter_yellow.png`, `critter_blue.png` | 130×115 | 260×230 | |
 | `patient_body_a.png`, `patient_body_b.png` | 190×250 | 380×500 | yes |
 | `face_calm.png`, `face_worried.png`, `face_critical.png`, `face_cured.png`, `face_dead.png` | 110×68 | 220×136 | |
@@ -18,8 +19,6 @@ Drop a PNG here with one of these names and it replaces the grey-box placeholder
 | `icon_red.png` … `icon_purple.png` (6) | 48×48 (status card) | 96×96 (or larger, same proportions) | yes |
 | `icon_heart.png` | 30×28 | 60×56 | yes |
 
-The burner ON/OFF switch under each pot is a regular `Button` styled by the shared theme (`ui/theme.tres`), so it needs no art file. It's tinted orange in code when on.
-
 Sizes and positions can be changed in the Godot editor: select the node and edit `size` in the Inspector.
 
-Sounds work the same way: put `res://audio/<name>.ogg` (or `.wav`) in `audio/` and `Sfx.play("<name>")` picks it up. These names are already called: `pour`, `pot_full`, `dump`, `boil_start`, `brew_perfect`, `boil_over`, `give`, `refuse`, `borrow`, `cure`, `bandaged`, `death`, `patient_arrive`, `emergency`, `shift_start`, `game_over`.
+Sounds work the same way: put `res://audio/<name>.ogg` (or `.wav`) in `audio/` and `Sfx.play("<name>")` picks it up. These names are already called: `pour`, `pot_full`, `dump`, `stir`, `brew_perfect`, `boil_warning`, `boil_over`, `give`, `refuse`, `borrow`, `cure`, `bandaged`, `death`, `patient_arrive`, `emergency`, `shift_start`, `game_over`.

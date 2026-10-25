@@ -2,7 +2,7 @@ class_name PatientCard
 extends Control
 ## Status card at the top of the screen, one per chair: the cure colour, the ailment,
 ## the clock as a bar and whether they've borrowed time. Reads its patient every frame.
-## The outline glows gold when either pot holds a servable brew that's this patient's cure,
+## The outline glows gold when the pot holds a set brew that's this patient's cure,
 ## and is red for emergencies.
 
 const OUTLINE := Color(0.1, 0.08, 0.15)
@@ -26,7 +26,7 @@ const OUTCOME_COLOR := {
 }
 
 var patient: Patient
-## The servable brews in the pots (0 to 2 kinds).
+## The servable brew in the pot (0 or 1 kinds).
 var pot_kinds: Array[int] = []
 ## More patients still to come this shift.
 var waiting := false
@@ -70,16 +70,16 @@ func _process(delta: float) -> void:
 		status_label.text = OUTCOME_TEXT[patient.outcome]
 		status_label.modulate = OUTCOME_COLOR[patient.outcome]
 	elif info.bandaged:
-		status_label.text = "Bandaged · last chance"
+		status_label.text = "Bandaged · next +%ds" % Game.config.borrow_for(info.borrows)
 		status_label.modulate = CRITICAL.lightened(0.3)
-	elif info.borrowed:
-		status_label.text = "Borrowed time"
+	elif info.has_borrowed():
+		status_label.text = "Borrowed ×%d · next +%ds" % [info.borrows, Game.config.borrow_for(info.borrows)]
 		status_label.modulate = BORROWED.lightened(0.3)
 	elif info.emergency:
 		status_label.text = "EMERGENCY"
 		status_label.modulate = CRITICAL.lightened(0.3)
 	else:
-		status_label.text = "Weak dose: +%ds" % Game.config.borrow_seconds
+		status_label.text = "Weak dose: +%ds" % Game.config.borrow_for(0)
 		status_label.modulate = Color.WHITE
 	queue_redraw()
 
@@ -103,7 +103,7 @@ func _draw() -> void:
 		return
 	# Clock bar: green, purple once they've borrowed, flashing red near zero.
 	var fraction := clampf(patient.time_left / patient.clock_max, 0.0, 1.0)
-	var color := BORROWED if patient.info.borrowed else CLOCK
+	var color := BORROWED if patient.info.has_borrowed() else CLOCK
 	if patient.is_critical() and _flash():
 		color = CRITICAL
 	draw_rect(BAR_RECT, BAR_BACK)

@@ -4,18 +4,30 @@ extends Resource
 ## res://config/game_config.tres in the Inspector. Read them in code through Game.config.
 
 @export_group("Brewing")
-## Heat is seconds with the burner on since the last pour. Under this it's raw and can't be served.
-@export var weak_from := 0.5
-## From this much heat the brew is perfect.
-@export var perfect_from := 3.0
-## At this much heat the pot boils over, empties itself and switches off.
-@export var boil_over_at := 5.0
+## Heat is seconds of stirring (holding the mouse on the pot) since the last pour.
+## Let go before this and nothing sets: you can hold again.
+@export var weak_from := 0.4
+## The gold (perfect) band starts somewhere in this range, rolled fresh on every pour.
+@export var band_start_min := 1.4
+@export var band_start_max := 2.4
+## Band width in seconds of stirring. Secondaries get the narrower one.
+@export var band_width_primary := 0.7
+@export var band_width_secondary := 0.5
+## The band narrows this much every shift, down to band_width_min.
+@export var band_shrink_per_shift := 0.03
+@export var band_width_min := 0.35
+## Stirring this long boils the pot over and empties it.
+@export var boil_over_at := 4.0
+## Seconds before boil_over_at that the pot rattles and the ring flashes red.
+## The band always ends before this zone.
+@export var boil_warning := 0.8
 ## Pours the pot holds. One more is blocked.
 @export var max_pours := 2
 
 @export_group("Patients")
-## Seconds a weak (but correct) potion adds to the patient's clock.
-@export var borrow_seconds := 10.0
+## Seconds each weak (but correct) potion adds to the patient's clock: the first loan,
+## the second, and so on. The last value repeats. Borrowing again buys less (interest).
+@export var borrow_steps: PackedFloat32Array = [10.0, 6.0, 3.0]
 ## Seconds a wrong potion takes off the patient's clock.
 @export var wrong_serve_penalty := 2.0
 ## Under this many seconds the patient looks critical and the clock flashes.
@@ -106,3 +118,14 @@ func emergency_for_shift(shift: int) -> float:
 
 func chairs_for_shift(shift: int) -> int:
 	return clampi(shift_chairs[mini(shift - 1, shift_chairs.size() - 1)], 1, 3)
+
+
+## Seconds the patient's `count`-th loan buys (0 = first loan).
+func borrow_for(count: int) -> float:
+	return borrow_steps[clampi(count, 0, borrow_steps.size() - 1)]
+
+
+## Width of the gold band for a brew of `kind` on `shift`.
+func band_width(kind: int, shift: int) -> float:
+	var base := band_width_primary if Potion.is_primary(kind) else band_width_secondary
+	return maxf(band_width_min, base - band_shrink_per_shift * (shift - 1))

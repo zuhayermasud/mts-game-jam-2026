@@ -1,5 +1,5 @@
 extends Node2D
-## The clinic: wires critters -> selected pot -> click a patient, fills the chairs from
+## The clinic: wires critters -> pot -> click a patient, fills the chairs from
 ## the shift list, and keeps score and lives.
 
 const BODY_ARTS: Array[String] = ["patient_body_a", "patient_body_b"]
@@ -20,8 +20,7 @@ var _arrival_timer := 0.0
 var _hearts: Array[ArtSprite] = []
 
 @onready var cfg := Game.config
-@onready var pots: Array[Pot] = [$Pots/Left, $Pots/Right]
-@onready var selected_pot: Pot = pots[0]
+@onready var pot: Pot = $Pot
 @onready var chairs: Array[Patient] = [$Chairs/Left, $Chairs/Middle, $Chairs/Right]
 @onready var cards: Array[PatientCard] = [$HUD/Root/Cards/Left, $HUD/Root/Cards/Middle, $HUD/Root/Cards/Right]
 @onready var shift_label: Label = $HUD/Root/ShiftLabel
@@ -35,10 +34,7 @@ var _hearts: Array[ArtSprite] = []
 func _ready() -> void:
 	for critter: Critter in $Critters.get_children():
 		critter.squeezed.connect(_pour)
-	for pot in pots:
-		pot.select_requested.connect(_select.bind(pot))
-		pot.boiled_over.connect(func(): _toast("Boiled over! Brew it again", cfg.orange.lightened(0.3)))
-	_select(selected_pot)
+	pot.boiled_over.connect(func(): _toast("Boiled over! Brew it again", cfg.orange.lightened(0.3)))
 	for i in chairs.size():
 		var p := chairs[i]
 		p.clicked.connect(_on_patient_clicked.bind(p))
@@ -57,9 +53,8 @@ func _process(delta: float) -> void:
 	if game_over:
 		return
 	var brews: Array[int] = []
-	for pot in pots:
-		if pot.can_serve():
-			brews.append(pot.potion())
+	if pot.can_serve():
+		brews.append(pot.potion())
 	for card in cards:
 		card.pot_kinds = brews
 		card.waiting = not queue.is_empty()
@@ -77,6 +72,7 @@ func _process(delta: float) -> void:
 
 func _start_shift(number: int) -> void:
 	shift = number
+	Game.shift = number
 	shift_label.text = "Shift %d" % shift
 	queue.clear()
 	for i in cfg.patients_in_shift(shift):
@@ -107,44 +103,32 @@ func _free_chair() -> Patient:
 	return null
 
 
-func _select(pot: Pot) -> void:
-	selected_pot = pot
-	for other in pots:
-		other.selected = other == pot
-
-
 func _pour(kind: int) -> void:
-	selected_pot.pour(kind)
+	pot.pour(kind)
 
 
 func _on_patient_clicked(button: MouseButton, p: Patient) -> void:
 	if button != MOUSE_BUTTON_LEFT or game_over or not p.active:
 		return
-	if selected_pot.is_empty():
-		_toast("This pot is empty", Color.WHITE)
+	if pot.is_empty():
+		_toast("The pot is empty", Color.WHITE)
 		return
-	if not selected_pot.can_serve():
-		_toast("Still raw: let it boil" if selected_pot.burner_on else "Turn the burner on", Color.WHITE)
+	if not pot.can_serve():
+		_toast("Hold the pot to stir", Color.WHITE)
 		return
 	_serve(p)
 
 
-## Gives the selected pot's brew to `p`. A weak potion for someone who already borrowed
-## stays in the pot.
+## Gives the pot's brew to `p`.
 func _serve(p: Patient) -> void:
-	var pot := selected_pot
-	var kind := pot.potion()
-	var quality := pot.quality()
-	var result := p.serve(kind, quality)
-	if result == Patient.Serve.ALREADY_BORROWED:
-		_toast("Already borrowed: needs a perfect cure", cfg.orange.lightened(0.3))
-		return
+	var result := p.serve(pot.potion(), pot.quality())
 	pot.take()
 	Sfx.play("give")
 	match result:
 		Patient.Serve.BORROWED:
 			borrows += 1
-			_toast("+%d s borrowed time" % cfg.borrow_seconds, cfg.purple.lightened(0.3))
+			var n := p.info.borrows
+			_toast("+%d s borrowed (next +%d s)" % [cfg.borrow_for(n - 1), cfg.borrow_for(n)], cfg.purple.lightened(0.3))
 		Patient.Serve.REFUSED:
 			_add_score(cfg.score_wrong)
 			_toast("Ugh! Wrong potion −%d s" % cfg.wrong_serve_penalty, cfg.red.lightened(0.3))
@@ -156,7 +140,7 @@ func _on_patient_resolved(outcome: Patient.Outcome, p: Patient) -> void:
 	match outcome:
 		Patient.Outcome.CURED:
 			cured += 1
-			var base := cfg.score_after_borrow if p.info.borrowed else cfg.score_perfect
+			var base := cfg.score_after_borrow if p.info.has_borrowed() else cfg.score_perfect
 			var points := base + int(p.time_left) * cfg.score_per_second_left
 			_add_score(points)
 			_toast("Cured! +%d" % points, cfg.green.lightened(0.3))
