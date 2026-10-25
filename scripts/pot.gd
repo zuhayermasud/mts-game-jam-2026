@@ -1,7 +1,7 @@
 class_name Pot
 extends Clickable
 ## The pot on the counter. Pours land instantly and every pour starts the boil from zero:
-## the needle laps the ring by itself, passing the same zones every lap. Click the pot to
+## the needle laps the ring by itself, passing the same zones every lap. Left-click anywhere to
 ## pull the brew: in the gold band it's perfect, on grey it's weak (overcooked once the
 ## needle has passed the band), and in the red section it boils over and empties.
 ## Left alone, it boils over at the end of the last lap (pips count the laps left).

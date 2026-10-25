@@ -1,5 +1,5 @@
 extends Node2D
-## The clinic: wires critters -> pot -> click a patient, fills the chairs from
+## The clinic: wires critters -> pot -> right-click a patient, fills the chairs from
 ## the shift list, and keeps score and lives.
 
 const BODY_ARTS: Array[String] = ["patient_body_a", "patient_body_b"]
@@ -110,13 +110,28 @@ func _pour(kind: int) -> void:
 	pot.pour(kind)
 
 
+## A left click anywhere that nothing else took (not a critter or a button) pulls the pot,
+## so you never have to move the mouse back to the pot to stop the needle.
+func _unhandled_input(event: InputEvent) -> void:
+	if game_over:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		pot.pull()
+
+
+## Left-click a patient = pull, like anywhere else. Right-click = give them the pot.
 func _on_patient_clicked(button: MouseButton, p: Patient) -> void:
-	if button != MOUSE_BUTTON_LEFT or game_over or not p.active:
+	if game_over or not p.active:
+		return
+	if button == MOUSE_BUTTON_LEFT:
+		pot.pull()
+		return
+	if button != MOUSE_BUTTON_RIGHT:
 		return
 	if pot.is_empty():
 		_toast("The pot is empty", Color.WHITE)
 		return
-	# Clicking a patient while it boils pulls the brew right now and serves it.
+	# Right-clicking a patient while it boils pulls the brew right now and serves it.
 	# Pulling in the red boils it over (the boiled_over toast covers that).
 	if pot.is_boiling() and not pot.pull():
 		if not pot.is_empty():

@@ -14,7 +14,7 @@ Jam entry for MTS Game Jam 2026, theme **"Borrowed Time"**. The brief and judgin
 - Godot isn't installed on this machine yet. Install the standard Godot 4.x build, not .NET.
 
 ## Pitch
-A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking down. Up to three patients sit at once and all their clocks tick. You brew in **one pot**: pour colours in and it **boils by itself**; **click the pot when the needle is inside the gold band** on the ring. The band lands in a random spot every brew and gets smaller on later shifts. Pull it early or late and you get a weak potion, which buys a patient **borrowed time** (+10 s, then less each time: borrowing has interest). Forget it and it boils over. A patient who runs out of borrowed time comes back later, worse.
+A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking down. Up to three patients sit at once and all their clocks tick. You brew in **one pot**: pour colours in and it **boils by itself**; **left-click anywhere when the needle is inside the gold band** on the ring, then **right-click a patient** to give it to them. The band lands in a random spot every brew and gets smaller on later shifts. Pull it early or late and you get a weak potion, which buys a patient **borrowed time** (+10 s, then less each time: borrowing has interest). Forget it and it boils over. A patient who runs out of borrowed time comes back later, worse.
 
 ## Visual reference
 - Heavily inspired by **Miracle Merchant** (Tiny Touch Tales):
@@ -30,18 +30,18 @@ A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking
 
 ### Patients
 - **Up to 3 chairs, all clocks tick at once.** Chairs open per shift (1, then 2, then 3). Patients sit down one at a time, a short gap apart, whenever a chair is free.
-- **Click a patient to serve them** the brew in the pot. There is no GIVE button. If the pot is still boiling, the click pulls it at that moment and serves it, in one click. The potion arcs over to the patient as a tinted blob and they react when it lands (the outcome is decided on the click).
+- **Right-click a patient to serve them** the brew in the pot. There is no GIVE button. If the pot is still boiling, the right-click pulls it at that moment and serves it, in one click. A left click on a patient just pulls the pot, like a left click anywhere else. The potion arcs over to the patient as a tinted blob and they react when it lands (the outcome is decided on the click).
 - **A patient's skin colour is their cure.** Bandaged patients show their bandage.
 - **Top status bar:** one card per open chair, directly above it, showing the cure colour (icon and name), the ailment, a clock bar with seconds, and a status line (`Weak dose: +10s`, `EMERGENCY`, `Borrowed ×N · next +Xs`, `Bandaged · next +Xs`, then `Cured!` / `Back later, worse` / `Lost` as they leave). The bar is green, purple once they've borrowed, and flashes red under the critical threshold. A card's outline glows gold when the pot holds a set brew that's that patient's cure, and is red for an emergency patient. Empty chairs say "Next patient…".
 - Tiers: **primary** (1 colour), **secondary** (2 primaries: orange, green, purple), **boss** (two potions served in order; the bubble shows both).
 - Each shift has a **finite, hidden list** of patients. The total is never shown, and the queue just shrinks at the end.
 
 ### Brewing
-- **One pot** on the counter. Critters pour into it and clicking a patient serves from it.
+- **One pot** on the counter. Critters pour into it and right-clicking a patient serves from it.
 - **Ingredients are 3 living critters** (red, yellow, blue blobs) on the counter. Click one to squeeze it and it squirts its colour into the pot.
   - Fallback skins if the critters don't work: crystals or orbs, or plain potion bottles. The logic is identical, so only the art changes.
 - **Pours are instant.** The colour lands in the pot on the click. Squeeze and squirt animations are cosmetic and **never block input**, so you can click twice in quick succession.
-- **Auto boil.** Every pour starts the boil from zero: the spoon circles, the pot wobbles and steams, and a needle **loops** round the ring by itself, one lap every **3.2 s**, passing the same zones every lap (it reads as a spinning needle with a short trail, not a clock filling up). **Click the pot to pull the brew** and lock its quality in.
+- **Auto boil.** Every pour starts the boil from zero: the spoon circles, the pot wobbles and steams, and a needle **loops** round the ring by itself, one lap every **3.2 s**, passing the same zones every lap (it reads as a spinning needle with a short trail, not a clock filling up). **Left-click anywhere to pull the brew** and lock its quality in (anywhere except a critter, which pours instead). You never have to move the mouse back to the pot.
 - **The gold band (perfect)** starts at a **random spot** between 0.8 s and 2.4 s into the lap, **rolled fresh on every pour**, and comes round again every lap. On shift 1 it's 0.5 s wide for primaries and 0.4 s for secondaries; it narrows 0.06 s per shift (never under 0.2 s). It always ends before the red section. Entering it plays a ding.
 - Clicking **under 0.4 s** does nothing (still raw). Pulling on **grey before the band** (first lap) gives a weak brew. On grey **after the band has gone by** (that lap or any later one) it's weak and marked *Overcooked*. A miss still buys time, or you can wait a lap for the gold again.
 - **Red section:** the last 0.6 s of every lap is red. Entering it plays a warning sound, the pot rattles hard and the ring flashes. **Pulling in the red boils the pot over.**
@@ -51,7 +51,7 @@ A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking
 - Why: a timing skill on every brew (the band moves, so you have to watch the pot), while the pot keeps boiling when your attention is on the patients.
 - Pour results: 1 pour = that primary. Same colour twice = that primary. Two different primaries = their secondary. A third pour is blocked, with a "full" sound.
 - Two actions when a brew is ready:
-  - **Click a patient** to serve it to them (this also pulls a boiling pot).
+  - **Right-click a patient** to serve it to them (this also pulls a boiling pot).
   - **BOTTLE** pours it into a bottle on the **2-slot shelf** beside the pot. Bottling stops the cooking and freezes the quality. Bottles never decay.
 - Click a bottle on the shelf to serve it. This is how you brew ahead for waiting patients and bosses.
 - **Dumping:** right-click the pot or a bottle, or click the sink (no toolbar).
@@ -101,7 +101,7 @@ All of these live in one config resource.
 - Shift cards show one funny line each. Patients have silly ailments, shown on their status cards.
 
 ### Screens and controls
-- **Mouse only**, left click (plus right-click as a dump shortcut). No dragging.
+- **Mouse only.** Left click pours (on a critter) or pulls the pot (anywhere else). Right click serves (on a patient) or dumps (on the pot). No dragging.
 - Title screen: Play, Volume, Credits.
 - **Esc pauses the game.** The pause menu has music and SFX volume, Resume, and Quit to title.
 - Shift intro card: shift number, stars from the last shift, one flavour line.
@@ -123,6 +123,7 @@ All of these live in one config resource.
 - **Done (2026-10-25):** hold-to-stir replaced by auto boil and click-to-pull; the gold band lands anywhere from 1–3 s, starts smaller (0.5 s / 0.4 s) and shrinks 0.06 s per shift. Waiting on a playtest: the band should feel readable, early/late pulls should land weak, and three chairs on shift 3 should be manageable with loans.
 - **Done (2026-10-26):** handover polish: the potion flies from the pot to the patient, clicking a patient pulls a boiling pot and serves it in one click, and a wrong potion bounces back into the pot (−2 s).
 - **Done (2026-10-26):** the needle loops (3.2 s a lap) instead of filling the ring like a clock: pulling in the red boils over, and the pot boils over by itself after 3 laps.
+- **Done (2026-10-26):** left-click anywhere pulls the pot; right-click a patient serves them.
 - **Next:** sink, bosses, recipe poster and book, then title, pause and shift cards.
 - Audio is waiting on the user to choose a sound-generator project.
 

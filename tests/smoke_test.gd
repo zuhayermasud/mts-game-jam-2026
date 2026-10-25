@@ -78,6 +78,16 @@ func _run() -> void:
 	_check(pot.quality() == Potion.Quality.WEAK and pot.overcooked, "grey on a later lap = weak, overcooked")
 	pot.dump()
 
+	# A left click anywhere pulls the pot.
+	pot.pour(Potion.Kind.RED)
+	pot._process((pot.band_start + pot.band_end) * 0.5)
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	main._unhandled_input(click)
+	_check(pot.is_set() and pot.quality() == Potion.Quality.PERFECT, "a left click anywhere pulls the pot")
+	pot.dump()
+
 	# Pulling in the red boils over.
 	pot.pour(Potion.Kind.RED)
 	pot._process(pot.red_at() + 0.05)
@@ -117,9 +127,9 @@ func _run() -> void:
 	pot.pour(cure)
 	pot._process(cfg.weak_from * 0.5)
 	before = patient.time_left
-	main._on_patient_clicked(MOUSE_BUTTON_LEFT, patient)
+	main._on_patient_clicked(MOUSE_BUTTON_RIGHT, patient)
 	_check(pot.is_boiling() and patient.active and patient.time_left == before and patient.info.borrows == 0,
-			"clicking a patient while raw does nothing")
+			"right-clicking a patient while raw does nothing")
 	pot.dump()
 
 	# Weak correct potions borrow with interest: +10, +6, +3, then +3.
@@ -152,8 +162,8 @@ func _run() -> void:
 	pot.pour(patient.info.cure)
 	pot._process((pot.band_start + pot.band_end) * 0.5)
 	_check(pot.is_boiling(), "pot still on the boil before the click")
-	main._on_patient_clicked(MOUSE_BUTTON_LEFT, patient)
-	_check(patient.outcome == Patient.Outcome.CURED and pot.is_empty(), "clicking a patient pulls the boiling pot and serves it")
+	main._on_patient_clicked(MOUSE_BUTTON_RIGHT, patient)
+	_check(patient.outcome == Patient.Outcome.CURED and pot.is_empty(), "right-clicking a patient pulls the boiling pot and serves it")
 	_check(main.score >= score_before + cfg.score_perfect, "perfect brew cures and scores")
 
 	# Timeout without a borrow -> a life lost, but the run goes on.

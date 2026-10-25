@@ -1,7 +1,7 @@
 class_name Patient
 extends Clickable
 ## A patient in one of the chairs. Every seated patient's clock ticks at the same time.
-## Click them to serve the pot. Their status card at the top of the screen reads from here.
+## Right-click them to serve the pot. Their status card at the top of the screen reads from here.
 ## `resolved` fires the moment the outcome is decided (for score and lives),
 ## `gone` fires after the leave animation (the chair is free again).
 
