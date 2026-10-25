@@ -20,7 +20,7 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] 🎨 Spoon (circles in the pot while it boils)
 - [ ] 🧪 Potion blob (`potion_blob.png`, 36×36, rides on the cursor once pulled and flies to a patient; the arc is ⚙️)
 - [ ] ⚙️ Flame and bubbles
-- [ ] ⚙️ Boil ring: grey weak arc, moving gold band, red arc (pull there = boils over), needle that bounces between the ends with a trail, sweep pips (3 sweeps = boils over)
+- [ ] ⚙️ Boil ring: grey weak arc, moving gold band, red arc (pull there = boils over), needle that bounces between the ends with a trail
 - [ ] Potion name label under the pot ("Green Potion · Perfect!")
 - [ ] 🎨 (on hold) BOTTLE button, shelf with 2 slots, bottle + 🧪 liquid
 - [ ] 🎨 Sink built into the workbench

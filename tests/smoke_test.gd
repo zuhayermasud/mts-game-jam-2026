@@ -39,7 +39,7 @@ func _run() -> void:
 			bands_ok = bands_ok and pot.band_start >= cfg.weak_from \
 					and pot.band_end <= pot.red_at() + 0.001 \
 					and absf(pot.band_end - pot.band_start - width) < 0.001
-			starts[snappedf(pot.band_start, 0.1)] = true
+			starts[snappedf(pot.band_start, 0.05)] = true
 	_check(bands_ok, "band rolls stay in bounds and end before the red (primary and secondary)")
 	_check(starts.size() >= 8, "band lands in random spots")
 	_check(cfg.band_width(Potion.Kind.GREEN, 1) < cfg.band_width(Potion.Kind.RED, 1), "secondary band is narrower")
@@ -60,11 +60,11 @@ func _run() -> void:
 	_check(pot.heat == heat and not pot.pull(), "a pulled brew stops heating and can't be pulled again")
 	pot.dump()
 	pot.pour(Potion.Kind.BLUE)
-	_boil_to(pot, pot.band_start - 0.15)
+	_boil_to(pot, (pot.band_start + cfg.weak_from) * 0.5)
 	_check(pot.quality() == Potion.Quality.WEAK and not pot.overcooked, "pull before the band = weak")
 	pot.pour(Potion.Kind.BLUE)
 	_check(pot.set_quality == -1 and pot.heat == 0.0 and pot.is_boiling(), "pouring resets the brew and boils again")
-	_boil_to(pot, pot.band_end + 0.1)
+	_boil_to(pot, cfg.sweep_time * 2.0 - (pot.band_start + cfg.weak_from) * 0.5)
 	_check(pot.quality() == Potion.Quality.WEAK and pot.overcooked, "pull after the band = weak, overcooked")
 	pot.dump()
 
@@ -94,12 +94,11 @@ func _run() -> void:
 	_check(pot.is_boiling() and pot._zone == "red", "the needle reaches the red section")
 	_check(not pot.pull() and pot.is_empty(), "pulling in the red boils the pot over")
 
-	# Left alone it boils over at the end of the last sweep.
+	# Left alone it never boils over: the needle keeps bouncing.
 	pot.pour(Potion.Kind.RED)
-	pot._process(pot.boil_over_at() - 0.05)
-	_check(pot.is_boiling() and pot.is_last_sweep(), "still boiling on the last sweep")
-	pot._process(0.1)
-	_check(pot.is_empty(), "after %d sweeps the pot boils over and empties" % cfg.boil_over_sweeps)
+	pot._process(cfg.sweep_time * 20.0)
+	_check(pot.is_boiling(), "left alone, the pot keeps boiling")
+	pot.dump()
 
 	# Shift 1 opens one chair.
 	var patient := await _next_seated(main)

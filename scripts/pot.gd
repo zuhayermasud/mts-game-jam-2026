@@ -5,7 +5,7 @@ extends Clickable
 ## the red end, passing the same zones every sweep. Left-click anywhere to
 ## pull the brew: in the gold band it's perfect, on grey it's weak (overcooked once the
 ## needle has passed the band), and in the red section it boils over and empties.
-## Left alone, it boils over at the end of the last sweep (pips count the sweeps left).
+## Left alone, it bounces forever.
 ## The band rolls to a random spot on every pour and narrows on later shifts.
 ## Right-click dumps the pot.
 
@@ -17,7 +17,7 @@ const SPOON_SPEED := 0.8
 const SPOON_ORBIT := Vector2(42, 10)
 const SPOON_REST := Vector2(30, -62)
 ## Seconds of needle trail drawn behind the dot.
-const TRAIL := 0.25
+const TRAIL := 0.12
 const TRAIL_DOTS := 6
 ## Gap at the top of the ring between the start and the red end.
 const RING_GAP := PI / 4
@@ -91,18 +91,10 @@ func red_at() -> float:
 	return Game.config.sweep_time - Game.config.red_width
 
 
-## Heat at which a pot left alone boils over: the end of the last sweep.
-func boil_over_at() -> float:
-	return Game.config.sweep_time * Game.config.boil_over_sweeps
-
-
 ## Sweeps the needle has finished.
 func sweeps_done() -> int:
 	return int(heat / Game.config.sweep_time)
 
-
-func is_last_sweep() -> bool:
-	return sweeps_done() >= Game.config.boil_over_sweeps - 1
 
 
 ## Returns false (and shakes) if the pot is full. Starts the boil again from zero.
@@ -168,9 +160,6 @@ func _process(delta: float) -> void:
 			queue_redraw()  # keep the glow pulsing
 		return
 	heat += delta
-	if heat >= boil_over_at():
-		_boil_over()
-		return
 	_bubble_sound -= delta
 	if _bubble_sound <= 0.0:
 		Sfx.play("bubble", 0.15)
@@ -190,8 +179,6 @@ func _process(delta: float) -> void:
 		_refresh()
 	if zone == "red":
 		hit.rotation = sin(_time * 70.0) * 0.09
-	elif is_last_sweep():
-		hit.rotation = sin(_time * 40.0) * 0.05
 	else:
 		hit.rotation = sin(_time * 22.0) * 0.03
 	queue_redraw()
@@ -304,11 +291,8 @@ func _draw() -> void:
 	draw_arc(Vector2.ZERO, ring_radius, _angle(band_start), _angle(band_end), 16, Color(perfect_color, 0.85), ring_width, true)
 	var red_alpha := (0.9 if flash else 0.6) if in_red else 0.45
 	draw_arc(Vector2.ZERO, ring_radius, _angle(red), _angle(cfg.sweep_time), 16, Color(warning_color, red_alpha), ring_width, true)
-	if is_boiling() and (in_red or is_last_sweep()):
-		var alpha := 0.6 if flash else 0.2
-		if not in_red:
-			alpha *= 0.5
-		draw_arc(Vector2.ZERO, ring_radius + ring_width, 0.0, TAU, 64, Color(warning_color, alpha), 5.0, true)
+	if in_red:
+		draw_arc(Vector2.ZERO, ring_radius + ring_width, 0.0, TAU, 64, Color(warning_color, 0.6 if flash else 0.2), 5.0, true)
 	if quality() == Potion.Quality.PERFECT:
 		var glow := 0.35 + 0.25 * sin(_time * 12.0)
 		draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 64, Color(perfect_color, glow), ring_width * 2.2, true)
@@ -330,11 +314,6 @@ func _draw() -> void:
 		draw_circle(needle, ring_width * 0.75, Color(0.1, 0.08, 0.15))
 		draw_circle(needle, ring_width * 0.5, fill.lightened(0.3))
 	if is_boiling():
-		# Pips beside the ring: one goes dark per finished sweep.
-		for i in cfg.boil_over_sweeps:
-			var left := i >= sweeps_done()
-			var color := (warning_color if is_last_sweep() else Color.WHITE) if left else Color(0, 0, 0, 0.35)
-			draw_circle(Vector2(ring_radius + 22.0, -16.0 + i * 16.0), 5.0, color)
 		# Steam puffs above the pot while it's on the boil.
 		for i in 3:
 			var t := fmod(_time * 1.5 + i / 3.0, 1.0)
