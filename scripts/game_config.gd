@@ -4,12 +4,12 @@ extends Resource
 ## res://config/game_config.tres in the Inspector. Read them in code through Game.config.
 
 @export_group("Brewing")
-## Heat is seconds spent holding the pot. Under this it's raw and can't be served.
-@export var weak_from := 0.25
+## Heat is seconds with the burner on since the last pour. Under this it's raw and can't be served.
+@export var weak_from := 0.5
 ## From this much heat the brew is perfect.
-@export var perfect_from := 1.2
-## At this much heat the pot boils over and empties itself.
-@export var boil_over_at := 1.8
+@export var perfect_from := 3.0
+## At this much heat the pot boils over, empties itself and switches off.
+@export var boil_over_at := 5.0
 ## Pours the pot holds. One more is blocked.
 @export var max_pours := 2
 
@@ -38,18 +38,21 @@ extends Resource
 @export_group("Shifts")
 ## Index 0 is shift 1. Later shifts extrapolate from the last entry.
 @export var shift_patients: PackedInt32Array = [4, 6, 7, 8]
-@export var shift_clock: PackedFloat32Array = [25.0, 24.0, 22.0, 20.0]
+@export var shift_clock: PackedFloat32Array = [22.0, 18.0, 15.0, 13.0]
 ## Chance that a patient needs a secondary colour.
 @export var shift_secondary_chance: PackedFloat32Array = [0.0, 0.4, 0.5, 0.6]
 ## Chairs open at once (max 3). All their clocks tick together.
 @export var shift_chairs: PackedInt32Array = [1, 2, 3, 3]
+## Chance that a patient is an emergency, on the short emergency clock.
+@export var emergency_chance: PackedFloat32Array = [0.0, 0.15, 0.25, 0.3]
+@export var emergency_clock := 7.0
 @export var later_shift_extra_patients := 1
 @export var later_shift_clock_drop := 1.0
-@export var min_clock := 12.0
+@export var min_clock := 10.0
 ## Seconds before the first patient of a shift sits down.
 @export var first_arrival_delay := 1.0
 ## Seconds between two patients sitting down, so they don't all arrive at once.
-@export var arrival_gap := 2.5
+@export var arrival_gap := 1.5
 
 @export_group("Score")
 @export var score_perfect := 100
@@ -95,6 +98,10 @@ func clock_for_shift(shift: int) -> float:
 
 func secondary_chance(shift: int) -> float:
 	return shift_secondary_chance[mini(shift - 1, shift_secondary_chance.size() - 1)]
+
+
+func emergency_for_shift(shift: int) -> float:
+	return emergency_chance[mini(shift - 1, emergency_chance.size() - 1)]
 
 
 func chairs_for_shift(shift: int) -> int:

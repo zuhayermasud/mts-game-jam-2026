@@ -18,27 +18,39 @@ func _run() -> void:
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	add_child(main)
 	await get_tree().process_frame
-	var pot: Pot = main.pot
+	var pot: Pot = main.selected_pot
 	var cfg := Game.config
 
-	# Hold-to-boil timeline and third-pour block.
+	# Burner timeline and third-pour block.
 	_check(pot.pour(Potion.Kind.RED) and pot.pour(Potion.Kind.YELLOW), "two pours accepted")
 	_check(not pot.pour(Potion.Kind.BLUE), "third pour blocked")
 	_check(pot.potion() == Potion.Kind.ORANGE, "pot mixes orange")
 	_check(not pot.can_serve(), "raw brew can't be served")
 	pot._process(5.0)
-	_check(pot.heat == 0.0, "pot doesn't heat up unless held")
+	_check(pot.heat == 0.0, "pot doesn't heat up with the burner off")
 	_boil(pot, cfg.weak_from + 0.1)
 	_check(pot.quality() == Potion.Quality.WEAK and pot.can_serve(), "short boil = weak")
 	_boil(pot, cfg.perfect_from - cfg.weak_from)
 	_check(pot.quality() == Potion.Quality.PERFECT, "boil to %ss = perfect" % cfg.perfect_from)
+	var heat := pot.heat
 	pot._process(5.0)
-	_check(pot.quality() == Potion.Quality.PERFECT, "released pot keeps its quality")
-	_boil(pot, cfg.boil_over_at)
-	_check(pot.is_empty() and not pot.boiling, "boiling past perfect boils over and empties")
+	_check(pot.heat == heat and pot.quality() == Potion.Quality.PERFECT, "burner off freezes heat and quality")
+	pot.set_burner(true)
+	pot._process(cfg.boil_over_at)
+	_check(pot.is_empty() and not pot.burner_on, "boiling past perfect boils over, empties and switches off")
 	pot.pour(Potion.Kind.RED)
 	pot.dump()
 	_check(pot.is_empty(), "dump empties pot")
+
+	# Two pots: critters pour into the selected one, patients are served from it.
+	var left: Pot = main.pots[0]
+	var right: Pot = main.pots[1]
+	_check(main.selected_pot == left and left.selected and not right.selected, "left pot starts selected")
+	right.select_requested.emit()
+	main._pour(Potion.Kind.BLUE)
+	_check(right.potion() == Potion.Kind.BLUE and left.is_empty(), "pours go to the selected pot")
+	right.dump()
+	main._select(left)
 
 	# Shift 1 opens one chair.
 	var patient := await _next_seated(main)
@@ -72,14 +84,19 @@ func _run() -> void:
 	_check(returning.bandaged and returning.cure in Potion.SECONDARIES, "they come back bandaged and harder")
 	_check(info.cure == cure, "leaving patient keeps their colour")
 
-	# Next patient: perfect cure scores.
+	# Next patient: a perfect cure from the selected (right) pot scores; the left pot is untouched.
 	await patient.gone
 	patient = await _next_seated(main)
 	var score_before: int = main.score
-	pot.pour(patient.info.cure)
-	_boil(pot, cfg.perfect_from + 0.1)
+	_weak(left, Potion.Kind.RED if patient.info.cure != Potion.Kind.RED else Potion.Kind.BLUE)
+	right.pour(patient.info.cure)
+	_boil(right, cfg.perfect_from + 0.1)
+	main._select(right)
 	main._serve(patient)
-	_check(main.score >= score_before + cfg.score_perfect, "perfect cure scores")
+	_check(main.score >= score_before + cfg.score_perfect and right.is_empty() and not left.is_empty(),
+			"serving uses the selected pot")
+	left.dump()
+	main._select(left)
 
 	# Timeout without a borrow -> a life lost, but the run goes on.
 	await patient.gone
@@ -109,15 +126,23 @@ func _run() -> void:
 		all_ticked = all_ticked and seated[i].time_left < clocks[i]
 	_check(all_ticked, "all seated clocks tick together")
 
+	# Emergencies arrive on the short clock.
+	var chances := cfg.emergency_chance
+	cfg.emergency_chance = PackedFloat32Array([1.0])
+	main._start_shift(4)
+	_check(main.queue.all(func(p: PatientInfo): return p.emergency and p.clock == cfg.emergency_clock),
+			"emergency patients get the emergency clock")
+	cfg.emergency_chance = chances
+
 	print("SMOKE TEST: %s" % ("PASS" if failures == 0 else "%d FAILED" % failures))
 	get_tree().quit(failures)
 
 
-## Holds the pot down for `seconds`, then lets go.
+## Turns the burner on for `seconds`, then off.
 func _boil(pot: Pot, seconds: float) -> void:
-	pot.start_boil()
+	pot.set_burner(true)
 	pot._process(seconds)
-	pot.stop_boil()
+	pot.set_burner(false)
 
 
 func _weak(pot: Pot, kind: int) -> void:

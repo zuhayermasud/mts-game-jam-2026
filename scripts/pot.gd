@@ -1,32 +1,45 @@
 class_name Pot
 extends Clickable
-## The hero pot. Pours land instantly. Hold the left button on the pot to boil it:
-## heat only rises while you hold, so a released pot waits safely. Raw, then weak,
-## then perfect; hold past perfect and it boils over and empties. Pouring resets the heat.
-## Right-click dumps it.
+## One of the two pots on the counter. Pours land instantly. The burner switch under it
+## turns the heat on and off: while it's on, heat rises by itself (raw, then weak, then
+## perfect) and past perfect the pot boils over, empties and switches off. While it's
+## off, heat and quality freeze. Pouring resets the heat. Left-click selects the pot,
+## right-click dumps it.
 
 signal boiled_over
+## Left-clicked: main makes this the pot that critters pour into and patients are served from.
+signal select_requested
 
-@export var ring_radius := 120.0
+const ARROW_Y := -128.0
+
+@export var ring_radius := 95.0
 @export var ring_width := 14.0
 @export var raw_color := Color(0.5, 0.5, 0.55)
 @export var weak_color := Color(0.85, 0.85, 0.9)
 @export var perfect_color := Color(1.0, 0.85, 0.3)
 
 var pours: Array[int] = []
-## Seconds held on the boil since the last pour.
+## Seconds on the boil since the last pour.
 var heat := 0.0
-var boiling := false
+var burner_on := false
+## Critters pour into the selected pot and patients are served from it.
+var selected := false:
+	set(value):
+		selected = value
+		queue_redraw()
 var _last_quality := -1
 var _time := 0.0
 var _juice_tween: Tween
 
 @onready var liquid: ArtSprite = $Body/Liquid
 @onready var label: Label = $Label
+@onready var burner: Button = $Burner
 
 
 func _ready() -> void:
 	clicked.connect(_on_clicked)
+	burner.pressed.connect(toggle_burner)
+	_refresh_burner()
 	_refresh()
 
 
@@ -65,16 +78,20 @@ func pour(kind: int) -> bool:
 	return true
 
 
-func start_boil() -> void:
-	if is_empty() or boiling:
+func toggle_burner() -> void:
+	set_burner(not burner_on)
+
+
+func set_burner(on: bool) -> void:
+	if on == burner_on:
 		return
-	boiling = true
-	Sfx.play("boil_start")
-
-
-func stop_boil() -> void:
-	boiling = false
-	hit.rotation = 0.0
+	burner_on = on
+	if on:
+		Sfx.play("boil_start")
+	else:
+		hit.rotation = 0.0
+	_refresh_burner()
+	_refresh()
 	queue_redraw()
 
 
@@ -97,21 +114,16 @@ func _on_clicked(button: MouseButton) -> void:
 	if button == MOUSE_BUTTON_RIGHT:
 		dump()
 	elif button == MOUSE_BUTTON_LEFT:
-		start_boil()
-
-
-## Let go anywhere on screen to stop boiling.
-func _input(event: InputEvent) -> void:
-	if boiling and event is InputEventMouseButton and not event.pressed \
-			and event.button_index == MOUSE_BUTTON_LEFT:
-		stop_boil()
+		select_requested.emit()
 
 
 func _process(delta: float) -> void:
 	_time += delta
+	if selected:
+		queue_redraw()  # bob the arrow
 	if is_empty():
 		return
-	if boiling:
+	if burner_on:
 		heat += delta
 		hit.rotation = sin(_time * 45.0) * 0.03
 		if heat >= Game.config.boil_over_at:
@@ -130,13 +142,14 @@ func _process(delta: float) -> void:
 
 func _boil_over() -> void:
 	Sfx.play("boil_over")
+	set_burner(false)
 	_clear()
 	_shake()
 	boiled_over.emit()
 
 
 func _clear() -> void:
-	stop_boil()
+	hit.rotation = 0.0
 	pours.clear()
 	heat = 0.0
 	_refresh()
@@ -155,14 +168,24 @@ func _refresh() -> void:
 	liquid.self_modulate = tint.lightened(0.45) if _last_quality == Potion.Quality.RAW else tint
 	var potion_name := Potion.display_name(potion())
 	match _last_quality:
-		Potion.Quality.RAW: label.text = "%s · Hold the pot to boil" % potion_name
-		Potion.Quality.WEAK: label.text = "%s · Weak (buys time)" % potion_name
+		Potion.Quality.RAW: label.text = "%s · %s" % [potion_name, "Heating" if burner_on else "Turn on"]
+		Potion.Quality.WEAK: label.text = "%s · Weak" % potion_name
 		Potion.Quality.PERFECT: label.text = "%s · Perfect!" % potion_name
+
+
+func _refresh_burner() -> void:
+	burner.text = "ON" if burner_on else "OFF"
+	burner.self_modulate = Game.config.orange.lightened(0.2) if burner_on else Color.WHITE
 
 
 func _draw() -> void:
 	var cfg := Game.config
 	var start := -PI / 2
+	if selected:
+		# Highlight ring and a little arrow pointing down at the selected pot.
+		draw_arc(Vector2.ZERO, ring_radius + ring_width + 4.0, 0.0, TAU, 64, Color(1, 1, 1, 0.8), 4.0, true)
+		var tip := Vector2(0, ARROW_Y + 12.0 + sin(_time * 5.0) * 4.0)
+		draw_colored_polygon([tip, tip + Vector2(-16, -20), tip + Vector2(16, -20)], Color.WHITE)
 	var raw_end := start + TAU * cfg.weak_from / cfg.boil_over_at
 	var weak_end := start + TAU * cfg.perfect_from / cfg.boil_over_at
 	# Zones round the ring: raw, weak, then perfect. Full circle = boils over.
@@ -181,11 +204,11 @@ func _draw() -> void:
 			var glow := 0.35 + 0.25 * sin(_time * 12.0)
 			draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 64, Color(perfect_color, glow), ring_width * 2.2, true)
 			draw_arc(Vector2.ZERO, ring_radius, start, end, 64, perfect_color, ring_width, true)
-	if boiling:
+	if burner_on:
 		# Steam puffs above the pot while it's on the boil.
 		for i in 3:
 			var t := fmod(_time * 1.5 + i / 3.0, 1.0)
-			draw_circle(Vector2((i - 1) * 40.0, -110.0 - t * 60.0), 10.0 + t * 8.0, Color(1, 1, 1, 0.35 * (1.0 - t)))
+			draw_circle(Vector2((i - 1) * 32.0, -85.0 - t * 50.0), 8.0 + t * 7.0, Color(1, 1, 1, 0.35 * (1.0 - t)))
 
 
 func _splash() -> void:

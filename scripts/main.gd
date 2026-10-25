@@ -1,6 +1,6 @@
 extends Node2D
-## The clinic: wires critters -> pot -> click a patient, fills the chairs from the
-## shift list, and keeps score and lives.
+## The clinic: wires critters -> selected pot -> click a patient, fills the chairs from
+## the shift list, and keeps score and lives.
 
 const BODY_ARTS: Array[String] = ["patient_body_a", "patient_body_b"]
 ## Which chairs (left, middle, right) open for 1, 2 or 3 chairs.
@@ -20,7 +20,8 @@ var _arrival_timer := 0.0
 var _hearts: Array[ArtSprite] = []
 
 @onready var cfg := Game.config
-@onready var pot: Pot = $Pot
+@onready var pots: Array[Pot] = [$Pots/Left, $Pots/Right]
+@onready var selected_pot: Pot = pots[0]
 @onready var chairs: Array[Patient] = [$Chairs/Left, $Chairs/Middle, $Chairs/Right]
 @onready var cards: Array[PatientCard] = [$HUD/Root/Cards/Left, $HUD/Root/Cards/Middle, $HUD/Root/Cards/Right]
 @onready var shift_label: Label = $HUD/Root/ShiftLabel
@@ -33,8 +34,11 @@ var _hearts: Array[ArtSprite] = []
 
 func _ready() -> void:
 	for critter: Critter in $Critters.get_children():
-		critter.squeezed.connect(pot.pour)
-	pot.boiled_over.connect(func(): _toast("Boiled over! Brew it again", cfg.orange.lightened(0.3)))
+		critter.squeezed.connect(_pour)
+	for pot in pots:
+		pot.select_requested.connect(_select.bind(pot))
+		pot.boiled_over.connect(func(): _toast("Boiled over! Brew it again", cfg.orange.lightened(0.3)))
+	_select(selected_pot)
 	for i in chairs.size():
 		var p := chairs[i]
 		p.clicked.connect(_on_patient_clicked.bind(p))
@@ -52,16 +56,23 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if game_over:
 		return
-	var brew := pot.potion() if pot.can_serve() else Potion.Kind.NONE
+	var brews: Array[int] = []
+	for pot in pots:
+		if pot.can_serve():
+			brews.append(pot.potion())
 	for card in cards:
-		card.pot_kind = brew
+		card.pot_kinds = brews
 		card.waiting = not queue.is_empty()
 	_arrival_timer -= delta
 	if _arrival_timer <= 0.0 and not queue.is_empty():
 		var chair := _free_chair()
 		if chair:
-			chair.arrive(queue.pop_front())
+			var info: PatientInfo = queue.pop_front()
+			chair.arrive(info)
 			_arrival_timer = cfg.arrival_gap
+			if info.emergency:
+				Sfx.play("emergency")
+				_toast("Emergency! Only %d s" % cfg.emergency_clock, cfg.red.lightened(0.3))
 
 
 func _start_shift(number: int) -> void:
@@ -73,6 +84,9 @@ func _start_shift(number: int) -> void:
 		var secondary := randf() < cfg.secondary_chance(shift)
 		p.cure = (Potion.SECONDARIES if secondary else Potion.PRIMARIES).pick_random()
 		p.clock = cfg.clock_for_shift(shift)
+		if randf() < cfg.emergency_for_shift(shift):
+			p.emergency = true
+			p.clock = cfg.emergency_clock
 		p.ailment = cfg.ailments[randi() % cfg.ailments.size()]
 		p.body_art = BODY_ARTS.pick_random()
 		queue.append(p)
@@ -93,17 +107,32 @@ func _free_chair() -> Patient:
 	return null
 
 
+func _select(pot: Pot) -> void:
+	selected_pot = pot
+	for other in pots:
+		other.selected = other == pot
+
+
+func _pour(kind: int) -> void:
+	selected_pot.pour(kind)
+
+
 func _on_patient_clicked(button: MouseButton, p: Patient) -> void:
-	if button != MOUSE_BUTTON_LEFT or game_over or not p.active or pot.is_empty():
+	if button != MOUSE_BUTTON_LEFT or game_over or not p.active:
 		return
-	if not pot.can_serve():
-		_toast("Boil it first: hold the pot", Color.WHITE)
+	if selected_pot.is_empty():
+		_toast("This pot is empty", Color.WHITE)
+		return
+	if not selected_pot.can_serve():
+		_toast("Still raw: let it boil" if selected_pot.burner_on else "Turn the burner on", Color.WHITE)
 		return
 	_serve(p)
 
 
-## Gives the pot's brew to `p`. A weak potion for someone who already borrowed stays in the pot.
+## Gives the selected pot's brew to `p`. A weak potion for someone who already borrowed
+## stays in the pot.
 func _serve(p: Patient) -> void:
+	var pot := selected_pot
 	var kind := pot.potion()
 	var quality := pot.quality()
 	var result := p.serve(kind, quality)
@@ -152,6 +181,7 @@ func _on_patient_gone() -> void:
 func _rebook(old: PatientInfo) -> void:
 	var p := old.duplicate_info()
 	p.bandaged = true
+	p.emergency = false  # they come back bandaged instead, on a normal clock
 	if Potion.is_primary(p.cure):
 		p.cure = Potion.secondaries_with(p.cure).pick_random()
 		p.clock = cfg.clock_for_shift(shift)

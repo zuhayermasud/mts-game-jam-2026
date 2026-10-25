@@ -16,13 +16,13 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] 🎨 Clinic background (kept muted so patients and potions stand out)
 - [ ] 🎨 Counter or workbench
 - [ ] 🎨 Ingredient critters ×3 (red, yellow, blue blobs). Reuse the face set: idle, squeezed, sweating, cheering. Squash and squirt are ⚙️
-- [ ] 🎨 Hero pot + 🧪 liquid layer, and a burner or flame base under it
+- [ ] 🎨 Pot + 🧪 liquid layer, and a burner or flame base under it (one drawing, used for both pots)
+- [ ] 🎨 Burner ON/OFF switch (a theme `Button` for now; optional knob or lever art, with an "on" state)
+- [ ] ⚙️ Selected-pot highlight (ring and arrow)
 - [ ] ⚙️ Flame and bubbles
 - [ ] ⚙️ Heat ring with raw / weak / perfect zones (full circle = boils over)
 - [ ] Potion name label under the pot ("Green Potion · Perfect!")
-- [ ] 🎨 BOTTLE button: normal, hover, pressed (serving is clicking a patient)
-- [ ] 🎨 Shelf with 2 slots
-- [ ] 🎨 Bottle + 🧪 liquid. States: weak (cloudy), perfect (sparkle ⚙️)
+- [ ] 🎨 (on hold) BOTTLE button, shelf with 2 slots, bottle + 🧪 liquid
 - [ ] 🎨 Sink built into the workbench
 - [ ] 🎨 Recipe poster on the wall (R+Y=O, Y+B=G, R+B=P)
 - [ ] 🎨 Recipe book: closed icon and open spread
@@ -33,7 +33,7 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] 🎨 Faces: calm, worried, critical, cured (happy), dead
 - [ ] 🎨 Boss patient (bigger silhouette)
 - [ ] 🎨 "Came back worse" marker (a bandage or patch)
-- [ ] Top status card per chair (drawn in code for now): cure icon, ailment, clock bar, status line
+- [ ] Top status card per chair (drawn in code for now): cure icon, ailment, clock bar, status line, red outline for emergencies
 - [ ] ⚙️ Lifespan clock bar on the card (green, purple after a borrow, flashing red near 0)
 - [ ] ⚙️ Walk in and out, bobbing, cure pop, death fade
 
@@ -63,7 +63,7 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] Hover scale-up on everything you can click
 
 ## 6. Audio
-- [ ] SFX: jar pour, flask clear, burner on, bubbling loop, perfect "ding", overcooked hiss, pull potion, give potion, cure jingle, weak-cure "meh", patient arrives, clock warning tick, death, shift start, game over, button click
+- [ ] SFX: jar pour, flask clear, burner on, bubbling loop, perfect "ding", overcooked hiss, pull potion, give potion, cure jingle, weak-cure "meh", patient arrives, emergency alarm, clock warning tick, death, shift start, game over, button click
 - [ ] Music: one loop that speeds up or gets more intense as danger rises
 - [ ] Theme cue: a distinct "borrowed time" sound when you give a weak potion
 

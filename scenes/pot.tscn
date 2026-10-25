@@ -11,22 +11,32 @@ hover_scale = 1.03
 [node name="Body" type="Node2D" parent="."]
 script = ExtResource("2_art")
 art_name = "pot"
-size = Vector2(190, 170)
+size = Vector2(150, 135)
 shape = 2
 placeholder_color = Color(0.35, 0.33, 0.4, 1)
 
 [node name="Liquid" type="Node2D" parent="Body"]
-position = Vector2(0, -50)
+position = Vector2(0, -40)
 script = ExtResource("2_art")
 art_name = "pot_liquid"
-size = Vector2(140, 46)
+size = Vector2(110, 36)
 shape = 2
 placeholder_color = Color(1, 1, 1, 1)
 
 [node name="Label" type="Label" parent="."]
-offset_left = -300.0
-offset_top = 134.0
-offset_right = 300.0
-offset_bottom = 174.0
+offset_left = -150.0
+offset_top = 96.0
+offset_right = 150.0
+offset_bottom = 124.0
+theme_override_font_sizes/font_size = 20
 text = "Squeeze a critter"
 horizontal_alignment = 1
+
+[node name="Burner" type="Button" parent="."]
+offset_left = -55.0
+offset_top = 126.0
+offset_right = 55.0
+offset_bottom = 170.0
+focus_mode = 0
+theme_override_font_sizes/font_size = 20
+text = "OFF"

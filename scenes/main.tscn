@@ -37,8 +37,13 @@ size = Vector2(720, 430)
 shape = 0
 placeholder_color = Color(0.24, 0.31, 0.33, 1)
 
-[node name="Pot" parent="." instance=ExtResource("4_pot")]
-position = Vector2(360, 600)
+[node name="Pots" type="Node2D" parent="."]
+
+[node name="Left" parent="Pots" instance=ExtResource("4_pot")]
+position = Vector2(200, 590)
+
+[node name="Right" parent="Pots" instance=ExtResource("4_pot")]
+position = Vector2(520, 590)
 
 [node name="Critters" type="Node2D" parent="."]
 

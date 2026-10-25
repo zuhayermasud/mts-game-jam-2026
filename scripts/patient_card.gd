@@ -2,7 +2,8 @@ class_name PatientCard
 extends Control
 ## Status card at the top of the screen, one per chair: the cure colour, the ailment,
 ## the clock as a bar and whether they've borrowed time. Reads its patient every frame.
-## The outline glows gold when the brew in the pot is this patient's cure.
+## The outline glows gold when either pot holds a servable brew that's this patient's cure,
+## and is red for emergencies.
 
 const OUTLINE := Color(0.1, 0.08, 0.15)
 const BG := Color(0.97, 0.96, 0.92)
@@ -25,8 +26,8 @@ const OUTCOME_COLOR := {
 }
 
 var patient: Patient
-## The servable brew in the pot, or Potion.Kind.NONE.
-var pot_kind := Potion.Kind.NONE
+## The servable brews in the pots (0 to 2 kinds).
+var pot_kinds: Array[int] = []
 ## More patients still to come this shift.
 var waiting := false
 
@@ -74,6 +75,9 @@ func _process(delta: float) -> void:
 	elif info.borrowed:
 		status_label.text = "Borrowed time"
 		status_label.modulate = BORROWED.lightened(0.3)
+	elif info.emergency:
+		status_label.text = "EMERGENCY"
+		status_label.modulate = CRITICAL.lightened(0.3)
 	else:
 		status_label.text = "Weak dose: +%ds" % Game.config.borrow_seconds
 		status_label.modulate = Color.WHITE
@@ -86,13 +90,14 @@ func _flash() -> bool:
 
 func _draw() -> void:
 	var seated := patient != null and patient.occupied
-	var matched := seated and patient.active and pot_kind == patient.info.cure
+	var matched := seated and patient.active and patient.info.cure in pot_kinds
+	var outline := CRITICAL if seated and patient.info.emergency else OUTLINE
 	_style.bg_color = BG if seated else EMPTY_BG
-	_style.border_color = OUTLINE
+	_style.border_color = outline
 	if matched:
 		_style.border_color = MATCH
 	elif seated and patient.is_critical() and _flash():
-		_style.border_color = CRITICAL
+		_style.border_color = OUTLINE if outline == CRITICAL else CRITICAL
 	draw_style_box(_style, Rect2(Vector2.ZERO, size))
 	if not seated:
 		return

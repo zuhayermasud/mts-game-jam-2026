@@ -10,6 +10,8 @@ var body_art: String
 var borrowed := false
 ## Ran out of borrowed time once and came back worse. Hitting 0 again kills them.
 var bandaged := false
+## Arrives on the short emergency clock.
+var emergency := false
 
 
 func duplicate_info() -> PatientInfo:
@@ -20,4 +22,5 @@ func duplicate_info() -> PatientInfo:
 	copy.body_art = body_art
 	copy.borrowed = borrowed
 	copy.bandaged = bandaged
+	copy.emergency = emergency
 	return copy
