@@ -114,7 +114,7 @@ func _on_patient_clicked(button: MouseButton, p: Patient) -> void:
 		_toast("The pot is empty", Color.WHITE)
 		return
 	if not pot.can_serve():
-		_toast("Hold the pot to stir", Color.WHITE)
+		_toast("Click the pot to pull the brew", Color.WHITE)
 		return
 	_serve(p)
 

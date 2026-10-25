@@ -19,18 +19,18 @@ func _run() -> void:
 	add_child(main)
 	await get_tree().process_frame
 	var pot: Pot = main.pot
-	pot.mouse_driven = false
 	var cfg := Game.config
 
 	# Third pour blocked.
 	_check(pot.pour(Potion.Kind.RED) and pot.pour(Potion.Kind.YELLOW), "two pours accepted")
 	_check(not pot.pour(Potion.Kind.BLUE), "third pour blocked")
 	_check(pot.potion() == Potion.Kind.ORANGE, "pot mixes orange")
-	_check(not pot.can_serve(), "unstirred brew can't be served")
+	_check(pot.is_boiling() and not pot.can_serve(), "pouring starts the boil; unpulled brew can't be served")
 	pot.dump()
 
-	# Band rolls stay in bounds and end before the warning zone.
+	# Band rolls stay in bounds, land in random spots and end before the warning zone.
 	var bands_ok := true
+	var starts := {}
 	for kind in [Potion.Kind.RED, Potion.Kind.GREEN]:
 		for i in 50:
 			pot.pours.clear()
@@ -39,49 +39,41 @@ func _run() -> void:
 			bands_ok = bands_ok and pot.band_start >= cfg.weak_from \
 					and pot.band_end <= pot.warning_at() + 0.001 \
 					and absf(pot.band_end - pot.band_start - width) < 0.001
+			starts[snappedf(pot.band_start, 0.1)] = true
 	_check(bands_ok, "band rolls stay in bounds and end before the warning (primary and secondary)")
+	_check(starts.size() >= 8, "band lands in random spots")
 	_check(cfg.band_width(Potion.Kind.GREEN, 1) < cfg.band_width(Potion.Kind.RED, 1), "secondary band is narrower")
+	_check(cfg.band_width(Potion.Kind.RED, 4) < cfg.band_width(Potion.Kind.RED, 1), "band narrows on later shifts")
+	_check(cfg.band_width(Potion.Kind.GREEN, 99) == cfg.band_width_min, "band never narrower than the minimum")
 	pot.dump()
 
-	# Letting go too early sets nothing; you can stir again.
+	# The pot boils by itself; pulling while raw does nothing.
 	pot.pour(Potion.Kind.RED)
-	_check(pot.start_stir(), "hold starts stirring")
 	pot._process(cfg.weak_from * 0.5)
-	pot.release_stir()
-	_check(not pot.can_serve() and pot.quality() == Potion.Quality.RAW, "letting go before weak_from leaves it unset")
-	_check(pot.start_stir(), "can stir again after an early let-go")
-	pot.release_stir()
+	_check(pot.heat > 0.0 and not pot.pull() and pot.is_boiling(), "pulling while raw does nothing, boil carries on")
 
-	# Let go mid-band = perfect, before = weak, after = weak and overcooked.
-	_stir_to(pot, (pot.band_start + pot.band_end) * 0.5)
-	_check(pot.can_serve() and pot.quality() == Potion.Quality.PERFECT and not pot.overcooked, "let go mid-band = perfect")
-	_check(not pot.start_stir(), "a set brew refuses another stir")
-	var old_band := pot.band_start
+	# Pull mid-band = perfect, before = weak, after = weak and overcooked.
+	_boil_to(pot, (pot.band_start + pot.band_end) * 0.5)
+	_check(pot.can_serve() and pot.quality() == Potion.Quality.PERFECT and not pot.overcooked, "pull mid-band = perfect")
+	var heat := pot.heat
+	pot._process(5.0)
+	_check(pot.heat == heat and not pot.pull(), "a pulled brew stops heating and can't be pulled again")
 	pot.dump()
 	pot.pour(Potion.Kind.BLUE)
-	_check(pot.set_quality == -1 and pot.heat == 0.0, "pouring resets the brew")
-	var rerolled := pot.band_start != old_band
-	for i in 5:
-		pot.pour(Potion.Kind.BLUE) if pot.pours.size() < 2 else pot.dump()
-		rerolled = rerolled or pot.band_start != old_band
-	_check(rerolled, "pouring re-rolls the band")
-	pot.dump()
+	_boil_to(pot, pot.band_start - 0.15)
+	_check(pot.quality() == Potion.Quality.WEAK and not pot.overcooked, "pull before the band = weak")
 	pot.pour(Potion.Kind.BLUE)
-	_stir_to(pot, pot.band_start - 0.2)
-	_check(pot.quality() == Potion.Quality.WEAK and not pot.overcooked, "let go before the band = weak")
-	pot.dump()
-	pot.pour(Potion.Kind.BLUE)
-	_stir_to(pot, pot.band_end + 0.1)
-	_check(pot.quality() == Potion.Quality.WEAK and pot.overcooked, "let go after the band = weak, overcooked")
+	_check(pot.set_quality == -1 and pot.heat == 0.0 and pot.is_boiling(), "pouring resets the brew and boils again")
+	_boil_to(pot, pot.band_end + 0.1)
+	_check(pot.quality() == Potion.Quality.WEAK and pot.overcooked, "pull after the band = weak, overcooked")
 	pot.dump()
 
-	# Holding to the end boils over.
+	# Left alone it boils over.
 	pot.pour(Potion.Kind.RED)
-	pot.start_stir()
 	pot._process(pot.warning_at() + 0.05)
-	_check(pot.stirring and pot._zone == "warning", "warning zone before boiling over")
+	_check(pot.is_boiling() and pot._zone == "warning", "warning zone before boiling over")
 	pot._process(cfg.boil_warning)
-	_check(pot.is_empty() and not pot.stirring, "holding to boil_over_at boils over and empties the pot")
+	_check(pot.is_empty(), "left to boil_over_at, the pot boils over and empties")
 
 	# Shift 1 opens one chair.
 	var patient := await _next_seated(main)
@@ -123,7 +115,7 @@ func _run() -> void:
 	patient = await _next_seated(main)
 	var score_before: int = main.score
 	pot.pour(patient.info.cure)
-	_stir_to(pot, (pot.band_start + pot.band_end) * 0.5)
+	_boil_to(pot, (pot.band_start + pot.band_end) * 0.5)
 	main._serve(patient)
 	_check(main.score >= score_before + cfg.score_perfect and pot.is_empty(), "perfect brew cures and scores")
 
@@ -167,16 +159,15 @@ func _run() -> void:
 	get_tree().quit(failures)
 
 
-## Stirs from scratch to `heat` seconds, then lets go.
-func _stir_to(pot: Pot, heat: float) -> void:
-	pot.start_stir()
+## Boils until `heat` seconds, then pulls.
+func _boil_to(pot: Pot, heat: float) -> void:
 	pot._process(heat - pot.heat)
-	pot.release_stir()
+	pot.pull()
 
 
 func _weak(pot: Pot, kind: int) -> void:
 	pot.pour(kind)
-	_stir_to(pot, Game.config.weak_from + 0.1)
+	_boil_to(pot, Game.config.weak_from + 0.1)
 
 
 ## Waits until a patient is sitting with their clock ticking.

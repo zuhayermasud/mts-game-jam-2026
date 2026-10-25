@@ -4,22 +4,22 @@ extends Resource
 ## res://config/game_config.tres in the Inspector. Read them in code through Game.config.
 
 @export_group("Brewing")
-## Heat is seconds of stirring (holding the mouse on the pot) since the last pour.
-## Let go before this and nothing sets: you can hold again.
+## Heat is seconds on the boil since the last pour (the pot boils by itself).
+## Clicking the pot before this does nothing: it's still raw.
 @export var weak_from := 0.4
-## The gold (perfect) band starts somewhere in this range, rolled fresh on every pour.
-@export var band_start_min := 1.4
-@export var band_start_max := 2.4
-## Band width in seconds of stirring. Secondaries get the narrower one.
-@export var band_width_primary := 0.7
-@export var band_width_secondary := 0.5
+## The gold (perfect) band starts anywhere in this range, rolled fresh on every pour.
+## It's clamped so it always ends before the warning zone.
+@export var band_start_min := 1.0
+@export var band_start_max := 3.0
+## Band width in seconds of boiling on shift 1. Secondaries get the narrower one.
+@export var band_width_primary := 0.5
+@export var band_width_secondary := 0.4
 ## The band narrows this much every shift, down to band_width_min.
-@export var band_shrink_per_shift := 0.03
-@export var band_width_min := 0.35
-## Stirring this long boils the pot over and empties it.
+@export var band_shrink_per_shift := 0.06
+@export var band_width_min := 0.2
+## Boiling this long boils the pot over and empties it.
 @export var boil_over_at := 4.0
 ## Seconds before boil_over_at that the pot rattles and the ring flashes red.
-## The band always ends before this zone.
 @export var boil_warning := 0.8
 ## Pours the pot holds. One more is blocked.
 @export var max_pours := 2

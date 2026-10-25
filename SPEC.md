@@ -14,7 +14,7 @@ Jam entry for MTS Game Jam 2026, theme **"Borrowed Time"**. The brief and judgin
 - Godot isn't installed on this machine yet. Install the standard Godot 4.x build, not .NET.
 
 ## Pitch
-A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking down. Up to three patients sit at once and all their clocks tick. You brew in **one pot**: pour colours in, then **hold the mouse on the pot to stir** and **let go inside a gold band** on the ring. The band rolls to a new spot every brew. Let go early or late and you get a weak potion, which buys a patient **borrowed time** (+10 s, then less each time: borrowing has interest). Hold too long and it boils over. A patient who runs out of borrowed time comes back later, worse.
+A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking down. Up to three patients sit at once and all their clocks tick. You brew in **one pot**: pour colours in and it **boils by itself**; **click the pot when the needle is inside the gold band** on the ring. The band lands in a random spot every brew and gets smaller on later shifts. Pull it early or late and you get a weak potion, which buys a patient **borrowed time** (+10 s, then less each time: borrowing has interest). Forget it and it boils over. A patient who runs out of borrowed time comes back later, worse.
 
 ## Visual reference
 - Heavily inspired by **Miracle Merchant** (Tiny Touch Tales):
@@ -41,13 +41,13 @@ A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking
 - **Ingredients are 3 living critters** (red, yellow, blue blobs) on the counter. Click one to squeeze it and it squirts its colour into the pot.
   - Fallback skins if the critters don't work: crystals or orbs, or plain potion bottles. The logic is identical, so only the art changes.
 - **Pours are instant.** The colour lands in the pot on the click. Squeeze and squirt animations are cosmetic and **never block input**, so you can click twice in quick succession.
-- **Hold to stir.** Hold the left mouse button on the pot: the spoon circles, the pot wobbles and steams, and a needle goes round the ring (heat = seconds of stirring, a full circle is 4 s). **Let go to set the brew.** Moving the mouse off the pot also lets go.
-- **The gold band (perfect)** starts somewhere between 1.4 s and 2.4 s, **rolled fresh on every pour**. It's 0.7 s wide for primaries and 0.5 s for secondaries, and narrows 0.03 s per shift (never under 0.35 s). It always ends before the warning zone.
-- Letting go **under 0.4 s** sets nothing: hold again. Letting go **before the band** gives a weak brew. **After the band** gives a weak brew marked *Overcooked*. A miss still buys time.
-- **Boil over:** the last 0.8 s of the ring is red. Entering it plays a warning sound, the pot rattles hard and the ring flashes red. At 4 s the pot empties with a shake and a "Boiled over!" toast. You lose the ingredients and the time, never the run.
+- **Auto boil.** Every pour starts the boil from zero: the spoon circles, the pot wobbles and steams, and a needle goes round the ring by itself (heat = seconds on the boil, a full circle is 4 s). **Click the pot to pull the brew** and lock its quality in.
+- **The gold band (perfect)** starts at a **random spot** between 1 s and 3 s, **rolled fresh on every pour**. On shift 1 it's 0.5 s wide for primaries and 0.4 s for secondaries; it narrows 0.06 s per shift (never under 0.2 s). It always ends before the warning zone. Entering it plays a ding.
+- Clicking **under 0.4 s** does nothing (still raw). Pulling **before the band** gives a weak brew. **After the band** gives a weak brew marked *Overcooked*. A miss still buys time.
+- **Boil over:** the last 0.8 s of the ring is red. Entering it plays a warning sound, the pot rattles hard and the ring flashes red. At 4 s the pot boils over: it empties with a shake and a "Boiled over!" toast. You lose the ingredients and the time, never the run.
 - **Pouring resets the brew** (even a set one) and re-rolls the band.
-- The ring shows a grey weak arc, the gold band, the red warning arc, and the fill plus a needle dot at the current heat. A label under the pot reads "Squeeze a critter", "Hold to stir", "Let go in the gold!" while stirring, then for example "Green Potion · Perfect!" / "· Weak" / "· Overcooked".
-- Why: a golf-meter timing skill on every brew (the band moves, so you have to watch), while every second you hold the pot is a second you're not watching the clocks.
+- The ring shows a grey weak arc, the gold band, the red warning arc, and the fill plus a needle dot at the current heat. A label under the pot reads "Squeeze a critter", "Heating…", "Click the pot in the gold!" while boiling, then for example "Green Potion · Perfect!" / "· Weak" / "· Overcooked".
+- Why: a timing skill on every brew (the band moves, so you have to watch the pot), while the pot keeps boiling when your attention is on the patients.
 - Pour results: 1 pour = that primary. Same colour twice = that primary. Two different primaries = their secondary. A third pour is blocked, with a "full" sound.
 - Two actions when a brew is ready:
   - **Click a patient** to serve it to them.
@@ -91,7 +91,7 @@ Patients sit down 1.5 s apart. Clocks are tight on purpose: perfecting every pat
 
 ### Emergencies
 - Each patient in a shift has a chance (table above) to be an **emergency**: they arrive on a **7 s clock**, with a red card outline, an `EMERGENCY` status line, an "Emergency!" toast and the `emergency` sound.
-- 7 s is tight for a perfect brew (up to ~3 s of stirring plus pouring), so an emergency usually needs a weak dose first.
+- 7 s is tight for a perfect brew (up to ~3 s of boiling plus pouring), so an emergency usually needs a weak dose first.
 - If an emergency patient runs out of borrowed time, they come back bandaged on a normal clock (no longer an emergency).
 All of these live in one config resource.
 
@@ -100,7 +100,7 @@ All of these live in one config resource.
 - Shift cards show one funny line each. Patients have silly ailments, shown on their status cards.
 
 ### Screens and controls
-- **Mouse only**, left click and hold-to-stir on the pot (plus right-click as a dump shortcut). No dragging.
+- **Mouse only**, left click (plus right-click as a dump shortcut). No dragging.
 - Title screen: Play, Volume, Credits.
 - **Esc pauses the game.** The pause menu has music and SFX volume, Resume, and Quit to title.
 - Shift intro card: shift number, stars from the last shift, one flavour line.
@@ -118,7 +118,8 @@ All of these live in one config resource.
 - **Done (2026-10-23):** the Godot 4 project and the grey-box core loop (critter pour → pot boil and quality ring → GIVE → active patient clock, borrow, bandage and rebook, death and game over, shifts and score). Numbers are in `config/game_config.tres`, and art swaps by file name (`assets/README.md`). Smoke test: `godot --headless res://tests/smoke_test.tscn`.
 - **Done (2026-10-24):** redesign: hold-to-boil pot with boil-over, 3 chairs whose clocks all tick, click a patient to serve, top status cards, 3 lives.
 - **Done (2026-10-24):** two pots on ON/OFF burner switches (click a pot to select it), longer perfect boil, tighter clocks, emergency patients.
-- **Done (2026-10-25):** one pot again: hold to stir, let go in a gold band that moves every pour (narrower for secondaries), overcooked and boil-over warning, borrowing with interest (+10/+6/+3 s). Waiting on a playtest: the band should feel readable, early/late let-gos should land weak, and three chairs on shift 3 should be manageable with loans.
+- **Done (2026-10-25):** one pot again: hold to stir, let go in a gold band that moves every pour (narrower for secondaries), overcooked and boil-over warning, borrowing with interest (+10/+6/+3 s).
+- **Done (2026-10-25):** hold-to-stir replaced by auto boil and click-to-pull; the gold band lands anywhere from 1–3 s, starts smaller (0.5 s / 0.4 s) and shrinks 0.06 s per shift. Waiting on a playtest: the band should feel readable, early/late pulls should land weak, and three chairs on shift 3 should be manageable with loans.
 - **Next:** sink, bosses, recipe poster and book, then title, pause and shift cards.
 - Audio is waiting on the user to choose a sound-generator project.
 

@@ -1,16 +1,17 @@
 class_name Pot
 extends Clickable
-## The pot on the counter. Pours land instantly. Hold the left mouse button on the pot to
-## stir: heat rises, the spoon circles and the needle goes round the ring. Let go to set
-## the brew: inside the gold band it's perfect, before or after it's weak (after = overcooked).
-## Hold to the end of the ring and it boils over and empties, after a rattling warning.
-## The band rolls to a new spot on every pour. Right-click dumps the pot.
+## The pot on the counter. Pours land instantly and every pour starts the boil from zero:
+## heat rises by itself and the needle goes round the ring. Click the pot to pull the
+## brew: inside the gold band it's perfect, before or after it's weak (after = overcooked).
+## Leave it to the end of the ring and it boils over and empties, after a rattling warning.
+## The band rolls to a random spot on every pour and narrows on later shifts.
+## Right-click dumps the pot.
 
 signal boiled_over
 
-const STIR_SOUND_EVERY := 0.35
-## Spoon turns per second while stirring.
-const SPOON_SPEED := 1.6
+const BUBBLE_SOUND_EVERY := 0.35
+## Spoon turns per second while boiling.
+const SPOON_SPEED := 0.8
 const SPOON_ORBIT := Vector2(42, 10)
 const SPOON_REST := Vector2(30, -62)
 
@@ -20,23 +21,19 @@ const SPOON_REST := Vector2(30, -62)
 @export var weak_color := Color(0.85, 0.85, 0.9)
 @export var perfect_color := Color(1.0, 0.85, 0.3)
 @export var warning_color := Color(1.0, 0.3, 0.25)
-## Let go when the mouse button is up or the mouse leaves the pot. The smoke test turns
-## this off and drives start_stir() / release_stir() itself.
-@export var mouse_driven := true
 
 var pours: Array[int] = []
-## Seconds of stirring since the last pour.
+## Seconds on the boil since the last pour.
 var heat := 0.0
-var stirring := false
-## The quality locked in on letting go, or -1 while the brew isn't set.
+## The quality locked in by pulling, or -1 while it's still boiling.
 var set_quality := -1
-## Let go after the gold band.
+## Pulled after the gold band.
 var overcooked := false
 var band_start := 0.0
 var band_end := 0.0
 
 var _zone := ""
-var _stir_sound := 0.0
+var _bubble_sound := 0.0
 var _spoon_angle := 0.0
 var _time := 0.0
 var _juice_tween: Tween
@@ -59,7 +56,12 @@ func is_set() -> bool:
 	return not is_empty() and set_quality != -1
 
 
-## True when the brew is set and can be served.
+## On the boil: poured and not pulled yet.
+func is_boiling() -> bool:
+	return not is_empty() and set_quality == -1
+
+
+## True when the brew has been pulled and can be served.
 func can_serve() -> bool:
 	return is_set()
 
@@ -68,7 +70,7 @@ func potion() -> int:
 	return Potion.mix(pours)
 
 
-## The set quality, or a live preview while stirring.
+## The pulled quality, or a live preview while boiling.
 func quality() -> int:
 	if set_quality != -1:
 		return set_quality
@@ -82,7 +84,7 @@ func warning_at() -> float:
 	return Game.config.boil_over_at - Game.config.boil_warning
 
 
-## Returns false (and shakes) if the pot is full.
+## Returns false (and shakes) if the pot is full. Starts the boil again from zero.
 func pour(kind: int) -> bool:
 	if pours.size() >= Game.config.max_pours:
 		Sfx.play("pot_full")
@@ -97,29 +99,20 @@ func pour(kind: int) -> bool:
 	return true
 
 
-## Starts stirring. Returns false if there's nothing to stir or the brew is already set.
-func start_stir() -> bool:
-	if is_empty() or is_set() or stirring:
+## Takes the pot off the boil and locks the quality in. Returns false if there's nothing
+## boiling or it's still raw.
+func pull() -> bool:
+	if not is_boiling() or heat < Game.config.weak_from:
 		return false
-	stirring = true
-	_stir_sound = 0.0
-	_zone = _zone_at(heat)
-	_refresh()
-	return true
-
-
-## Lets go. Too early and nothing sets; otherwise the quality locks in.
-func release_stir() -> void:
-	if not stirring:
-		return
-	stirring = false
+	set_quality = Potion.Quality.PERFECT if _in_band() else Potion.Quality.WEAK
+	overcooked = heat > band_end
 	hit.rotation = 0.0
-	if heat >= Game.config.weak_from:
-		set_quality = Potion.Quality.PERFECT if _in_band() else Potion.Quality.WEAK
-		overcooked = heat > band_end
-		_splash()
+	if set_quality == Potion.Quality.PERFECT:
+		Sfx.play("brew_perfect")
+	_splash()
 	_refresh()
 	queue_redraw()
+	return true
 
 
 ## Empties the pot and returns what was in it: {kind, quality}.
@@ -141,32 +134,23 @@ func _on_clicked(button: MouseButton) -> void:
 	if button == MOUSE_BUTTON_RIGHT:
 		dump()
 	elif button == MOUSE_BUTTON_LEFT:
-		start_stir()
-
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_MOUSE_EXIT or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
-		release_stir()
+		pull()
 
 
 func _process(delta: float) -> void:
 	_time += delta
-	if not stirring:
+	if not is_boiling():
 		if is_set() and quality() == Potion.Quality.PERFECT:
 			queue_redraw()  # keep the glow pulsing
-		return
-	if mouse_driven and (not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
-			or not hit.contains_point(get_global_mouse_position())):
-		release_stir()
 		return
 	heat += delta
 	if heat >= Game.config.boil_over_at:
 		_boil_over()
 		return
-	_stir_sound -= delta
-	if _stir_sound <= 0.0:
-		Sfx.play("stir", 0.15)
-		_stir_sound = STIR_SOUND_EVERY
+	_bubble_sound -= delta
+	if _bubble_sound <= 0.0:
+		Sfx.play("bubble", 0.15)
+		_bubble_sound = BUBBLE_SOUND_EVERY
 	_spoon_angle += TAU * SPOON_SPEED * delta
 	spoon.position = Vector2(cos(_spoon_angle) * SPOON_ORBIT.x, -40.0 + sin(_spoon_angle) * SPOON_ORBIT.y)
 	spoon.rotation = cos(_spoon_angle) * 0.35
@@ -175,7 +159,7 @@ func _process(delta: float) -> void:
 		_zone = zone
 		match zone:
 			"band":
-				Sfx.play("brew_perfect")
+				Sfx.play("brew_ready")
 				_splash()
 			"warning":
 				Sfx.play("boil_warning")
@@ -194,12 +178,14 @@ func _in_band() -> bool:
 func _zone_at(h: float) -> String:
 	if h >= warning_at():
 		return "warning"
+	if h < Game.config.weak_from:
+		return "raw"
 	if h >= band_start and h <= band_end:
 		return "band"
 	return "after" if h > band_end else "before"
 
 
-## Rolls a new gold band, always ending before the warning zone.
+## Rolls a new gold band at a random spot, always ending before the warning zone.
 func _roll_band() -> void:
 	var cfg := Game.config
 	var width := cfg.band_width(potion(), Game.shift)
@@ -209,11 +195,11 @@ func _roll_band() -> void:
 
 
 func _reset_brew() -> void:
-	stirring = false
 	heat = 0.0
 	set_quality = -1
 	overcooked = false
 	_zone = ""
+	_bubble_sound = 0.0
 	hit.rotation = 0.0
 
 
@@ -233,7 +219,7 @@ func _clear() -> void:
 
 func _refresh() -> void:
 	spoon.visible = not is_empty()
-	if not stirring:
+	if not is_boiling():
 		spoon.position = SPOON_REST
 		spoon.rotation = 0.3
 	if is_empty():
@@ -243,12 +229,9 @@ func _refresh() -> void:
 	liquid.visible = true
 	var tint := Game.config.potion_color(potion())
 	var potion_name := Potion.display_name(potion())
-	if stirring:
-		liquid.self_modulate = tint
-		label.text = "Let go in the gold!"
-	elif not is_set():
-		liquid.self_modulate = tint.lightened(0.45)
-		label.text = "Hold to stir"
+	if is_boiling():
+		liquid.self_modulate = tint.lightened(0.45) if heat < Game.config.weak_from else tint
+		label.text = "Heating…" if heat < Game.config.weak_from else "Click the pot in the gold!"
 	elif set_quality == Potion.Quality.PERFECT:
 		liquid.self_modulate = tint
 		label.text = "%s · Perfect!" % potion_name
@@ -271,7 +254,7 @@ func _draw() -> void:
 		return
 	# Zones round the ring: weak (grey), the gold band, then red. Full circle = boils over.
 	var warn := warning_at()
-	var in_warning := stirring and heat >= warn
+	var in_warning := is_boiling() and heat >= warn
 	var flash := in_warning and fmod(_time * 8.0, 2.0) < 1.0
 	draw_arc(Vector2.ZERO, ring_radius, _angle(cfg.weak_from), _angle(warn), 48, Color(weak_color, 0.2), ring_width, true)
 	draw_arc(Vector2.ZERO, ring_radius, _angle(band_start), _angle(band_end), 16, Color(perfect_color, 0.85), ring_width, true)
@@ -291,8 +274,8 @@ func _draw() -> void:
 		var needle := Vector2.from_angle(_angle(heat)) * ring_radius
 		draw_circle(needle, ring_width * 0.75, Color(0.1, 0.08, 0.15))
 		draw_circle(needle, ring_width * 0.5, fill.lightened(0.3))
-	if stirring:
-		# Steam puffs above the pot while it's stirred.
+	if is_boiling():
+		# Steam puffs above the pot while it's on the boil.
 		for i in 3:
 			var t := fmod(_time * 1.5 + i / 3.0, 1.0)
 			draw_circle(Vector2((i - 1) * 32.0, -85.0 - t * 50.0), 8.0 + t * 7.0, Color(1, 1, 1, 0.35 * (1.0 - t)))
