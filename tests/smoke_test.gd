@@ -37,10 +37,10 @@ func _run() -> void:
 			pot.pour(kind)
 			var width := cfg.band_width(kind, Game.shift)
 			bands_ok = bands_ok and pot.band_start >= cfg.weak_from \
-					and pot.band_end <= pot.warning_at() + 0.001 \
+					and pot.band_end <= pot.red_at() + 0.001 \
 					and absf(pot.band_end - pot.band_start - width) < 0.001
 			starts[snappedf(pot.band_start, 0.1)] = true
-	_check(bands_ok, "band rolls stay in bounds and end before the warning (primary and secondary)")
+	_check(bands_ok, "band rolls stay in bounds and end before the red (primary and secondary)")
 	_check(starts.size() >= 8, "band lands in random spots")
 	_check(cfg.band_width(Potion.Kind.GREEN, 1) < cfg.band_width(Potion.Kind.RED, 1), "secondary band is narrower")
 	_check(cfg.band_width(Potion.Kind.RED, 4) < cfg.band_width(Potion.Kind.RED, 1), "band narrows on later shifts")
@@ -68,12 +68,28 @@ func _run() -> void:
 	_check(pot.quality() == Potion.Quality.WEAK and pot.overcooked, "pull after the band = weak, overcooked")
 	pot.dump()
 
-	# Left alone it boils over.
+	# The needle loops: the band comes round again next lap.
 	pot.pour(Potion.Kind.RED)
-	pot._process(pot.warning_at() + 0.05)
-	_check(pot.is_boiling() and pot._zone == "warning", "warning zone before boiling over")
-	pot._process(cfg.boil_warning)
-	_check(pot.is_empty(), "left to boil_over_at, the pot boils over and empties")
+	_boil_to(pot, cfg.lap_time + (pot.band_start + pot.band_end) * 0.5)
+	_check(pot.quality() == Potion.Quality.PERFECT, "the gold band comes round again on the next lap")
+	pot.dump()
+	pot.pour(Potion.Kind.RED)
+	_boil_to(pot, cfg.lap_time + pot.band_start * 0.5)
+	_check(pot.quality() == Potion.Quality.WEAK and pot.overcooked, "grey on a later lap = weak, overcooked")
+	pot.dump()
+
+	# Pulling in the red boils over.
+	pot.pour(Potion.Kind.RED)
+	pot._process(pot.red_at() + 0.05)
+	_check(pot.is_boiling() and pot._zone == "red", "the needle reaches the red section")
+	_check(not pot.pull() and pot.is_empty(), "pulling in the red boils the pot over")
+
+	# Left alone it boils over at the end of the last lap.
+	pot.pour(Potion.Kind.RED)
+	pot._process(pot.boil_over_at() - 0.05)
+	_check(pot.is_boiling() and pot.is_last_lap(), "still boiling on the last lap")
+	pot._process(0.1)
+	_check(pot.is_empty(), "after %d laps the pot boils over and empties" % cfg.boil_over_laps)
 
 	# Shift 1 opens one chair.
 	var patient := await _next_seated(main)

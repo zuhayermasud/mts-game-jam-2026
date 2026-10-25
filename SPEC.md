@@ -41,12 +41,13 @@ A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking
 - **Ingredients are 3 living critters** (red, yellow, blue blobs) on the counter. Click one to squeeze it and it squirts its colour into the pot.
   - Fallback skins if the critters don't work: crystals or orbs, or plain potion bottles. The logic is identical, so only the art changes.
 - **Pours are instant.** The colour lands in the pot on the click. Squeeze and squirt animations are cosmetic and **never block input**, so you can click twice in quick succession.
-- **Auto boil.** Every pour starts the boil from zero: the spoon circles, the pot wobbles and steams, and a needle goes round the ring by itself (heat = seconds on the boil, a full circle is 4 s). **Click the pot to pull the brew** and lock its quality in.
-- **The gold band (perfect)** starts at a **random spot** between 1 s and 3 s, **rolled fresh on every pour**. On shift 1 it's 0.5 s wide for primaries and 0.4 s for secondaries; it narrows 0.06 s per shift (never under 0.2 s). It always ends before the warning zone. Entering it plays a ding.
-- Clicking **under 0.4 s** does nothing (still raw). Pulling **before the band** gives a weak brew. **After the band** gives a weak brew marked *Overcooked*. A miss still buys time.
-- **Boil over:** the last 0.8 s of the ring is red. Entering it plays a warning sound, the pot rattles hard and the ring flashes red. At 4 s the pot boils over: it empties with a shake and a "Boiled over!" toast. You lose the ingredients and the time, never the run.
+- **Auto boil.** Every pour starts the boil from zero: the spoon circles, the pot wobbles and steams, and a needle **loops** round the ring by itself, one lap every **3.2 s**, passing the same zones every lap (it reads as a spinning needle with a short trail, not a clock filling up). **Click the pot to pull the brew** and lock its quality in.
+- **The gold band (perfect)** starts at a **random spot** between 0.8 s and 2.4 s into the lap, **rolled fresh on every pour**, and comes round again every lap. On shift 1 it's 0.5 s wide for primaries and 0.4 s for secondaries; it narrows 0.06 s per shift (never under 0.2 s). It always ends before the red section. Entering it plays a ding.
+- Clicking **under 0.4 s** does nothing (still raw). Pulling on **grey before the band** (first lap) gives a weak brew. On grey **after the band has gone by** (that lap or any later one) it's weak and marked *Overcooked*. A miss still buys time, or you can wait a lap for the gold again.
+- **Red section:** the last 0.6 s of every lap is red. Entering it plays a warning sound, the pot rattles hard and the ring flashes. **Pulling in the red boils the pot over.**
+- **Boil over:** left alone, the pot boils over at the end of **lap 3**. Pips beside the ring count the laps left; on the last lap they turn red and the pot rattles. Boiling over empties the pot with a shake and a "Boiled over!" toast. You lose the ingredients and the time, never the run.
 - **Pouring resets the brew** (even a set one) and re-rolls the band.
-- The ring shows a grey weak arc, the gold band, the red warning arc, and the fill plus a needle dot at the current heat. A label under the pot reads "Squeeze a critter", "Heating…", "Click the pot in the gold!" while boiling, then for example "Green Potion · Perfect!" / "· Weak" / "· Overcooked".
+- The ring shows a grey weak arc, the gold band, the red warning arc, and a needle dot with a short trail. A label under the pot reads "Squeeze a critter", "Heating…", "Pull in the gold!" / "Not in the red!" while boiling, then for example "Green Potion · Perfect!" / "· Weak" / "· Overcooked".
 - Why: a timing skill on every brew (the band moves, so you have to watch the pot), while the pot keeps boiling when your attention is on the patients.
 - Pour results: 1 pour = that primary. Same colour twice = that primary. Two different primaries = their secondary. A third pour is blocked, with a "full" sound.
 - Two actions when a brew is ready:
@@ -121,6 +122,7 @@ All of these live in one config resource.
 - **Done (2026-10-25):** one pot again: hold to stir, let go in a gold band that moves every pour (narrower for secondaries), overcooked and boil-over warning, borrowing with interest (+10/+6/+3 s).
 - **Done (2026-10-25):** hold-to-stir replaced by auto boil and click-to-pull; the gold band lands anywhere from 1–3 s, starts smaller (0.5 s / 0.4 s) and shrinks 0.06 s per shift. Waiting on a playtest: the band should feel readable, early/late pulls should land weak, and three chairs on shift 3 should be manageable with loans.
 - **Done (2026-10-26):** handover polish: the potion flies from the pot to the patient, clicking a patient pulls a boiling pot and serves it in one click, and a wrong potion bounces back into the pot (−2 s).
+- **Done (2026-10-26):** the needle loops (3.2 s a lap) instead of filling the ring like a clock: pulling in the red boils over, and the pot boils over by itself after 3 laps.
 - **Next:** sink, bosses, recipe poster and book, then title, pause and shift cards.
 - Audio is waiting on the user to choose a sound-generator project.
 

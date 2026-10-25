@@ -117,8 +117,10 @@ func _on_patient_clicked(button: MouseButton, p: Patient) -> void:
 		_toast("The pot is empty", Color.WHITE)
 		return
 	# Clicking a patient while it boils pulls the brew right now and serves it.
+	# Pulling in the red boils it over (the boiled_over toast covers that).
 	if pot.is_boiling() and not pot.pull():
-		_toast("Still heating…", Color.WHITE)
+		if not pot.is_empty():
+			_toast("Still heating…", Color.WHITE)
 		return
 	_serve(p)
 

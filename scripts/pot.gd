@@ -1,9 +1,10 @@
 class_name Pot
 extends Clickable
 ## The pot on the counter. Pours land instantly and every pour starts the boil from zero:
-## heat rises by itself and the needle goes round the ring. Click the pot to pull the
-## brew: inside the gold band it's perfect, before or after it's weak (after = overcooked).
-## Leave it to the end of the ring and it boils over and empties, after a rattling warning.
+## the needle laps the ring by itself, passing the same zones every lap. Click the pot to
+## pull the brew: in the gold band it's perfect, on grey it's weak (overcooked once the
+## needle has passed the band), and in the red section it boils over and empties.
+## Left alone, it boils over at the end of the last lap (pips count the laps left).
 ## The band rolls to a random spot on every pour and narrows on later shifts.
 ## Right-click dumps the pot.
 
@@ -14,6 +15,9 @@ const BUBBLE_SOUND_EVERY := 0.35
 const SPOON_SPEED := 0.8
 const SPOON_ORBIT := Vector2(42, 10)
 const SPOON_REST := Vector2(30, -62)
+## Seconds of needle trail drawn behind the dot.
+const TRAIL := 0.25
+const TRAIL_DOTS := 6
 
 @export var ring_radius := 95.0
 @export var ring_width := 14.0
@@ -79,9 +83,23 @@ func quality() -> int:
 	return Potion.Quality.PERFECT if _in_band() else Potion.Quality.WEAK
 
 
-## Heat where the warning zone starts.
-func warning_at() -> float:
-	return Game.config.boil_over_at - Game.config.boil_warning
+## Point in each lap where the red section starts.
+func red_at() -> float:
+	return Game.config.lap_time - Game.config.red_width
+
+
+## Heat at which a pot left alone boils over: the end of the last lap.
+func boil_over_at() -> float:
+	return Game.config.lap_time * Game.config.boil_over_laps
+
+
+## Laps the needle has finished.
+func laps_done() -> int:
+	return int(heat / Game.config.lap_time)
+
+
+func is_last_lap() -> bool:
+	return laps_done() >= Game.config.boil_over_laps - 1
 
 
 ## Returns false (and shakes) if the pot is full. Starts the boil again from zero.
@@ -100,9 +118,12 @@ func pour(kind: int) -> bool:
 
 
 ## Takes the pot off the boil and locks the quality in. Returns false if there's nothing
-## boiling or it's still raw.
+## boiling or it's still raw. Pulling in the red section boils it over (also false).
 func pull() -> bool:
 	if not is_boiling() or heat < Game.config.weak_from:
+		return false
+	if _phase(heat) >= red_at():
+		_boil_over()
 		return false
 	set_quality = Potion.Quality.PERFECT if _in_band() else Potion.Quality.WEAK
 	overcooked = heat > band_end
@@ -144,7 +165,7 @@ func _process(delta: float) -> void:
 			queue_redraw()  # keep the glow pulsing
 		return
 	heat += delta
-	if heat >= Game.config.boil_over_at:
+	if heat >= boil_over_at():
 		_boil_over()
 		return
 	_bubble_sound -= delta
@@ -161,36 +182,45 @@ func _process(delta: float) -> void:
 			"band":
 				Sfx.play("brew_ready")
 				_splash()
-			"warning":
+			"red":
 				Sfx.play("boil_warning")
 		_refresh()
-	if zone == "warning":
+	if zone == "red":
 		hit.rotation = sin(_time * 70.0) * 0.09
+	elif is_last_lap():
+		hit.rotation = sin(_time * 40.0) * 0.05
 	else:
 		hit.rotation = sin(_time * 22.0) * 0.03
 	queue_redraw()
 
 
+## Where `h` falls in the current lap.
+func _phase(h: float) -> float:
+	return fmod(h, Game.config.lap_time)
+
+
 func _in_band() -> bool:
-	return heat >= band_start and heat <= band_end
+	var p := _phase(heat)
+	return p >= band_start and p <= band_end
 
 
 func _zone_at(h: float) -> String:
-	if h >= warning_at():
-		return "warning"
+	var p := _phase(h)
+	if p >= red_at():
+		return "red"
 	if h < Game.config.weak_from:
 		return "raw"
-	if h >= band_start and h <= band_end:
+	if p >= band_start and p <= band_end:
 		return "band"
 	return "after" if h > band_end else "before"
 
 
-## Rolls a new gold band at a random spot, always ending before the warning zone.
+## Rolls a new gold band at a random spot in the lap, always ending before the red section.
 func _roll_band() -> void:
 	var cfg := Game.config
 	var width := cfg.band_width(potion(), Game.shift)
 	band_start = randf_range(cfg.band_start_min, cfg.band_start_max)
-	band_start = clampf(band_start, cfg.weak_from, warning_at() - width)
+	band_start = clampf(band_start, cfg.weak_from, red_at() - width)
 	band_end = band_start + width
 
 
@@ -231,7 +261,12 @@ func _refresh() -> void:
 	var potion_name := Potion.display_name(potion())
 	if is_boiling():
 		liquid.self_modulate = tint.lightened(0.45) if heat < Game.config.weak_from else tint
-		label.text = "Heating…" if heat < Game.config.weak_from else "Click the pot in the gold!"
+		if heat < Game.config.weak_from:
+			label.text = "Heating…"
+		elif _zone == "red":
+			label.text = "Not in the red!"
+		else:
+			label.text = "Pull in the gold!"
 	elif set_quality == Potion.Quality.PERFECT:
 		liquid.self_modulate = tint
 		label.text = "%s · Perfect!" % potion_name
@@ -243,8 +278,9 @@ func _refresh() -> void:
 		label.text = "%s · Weak" % potion_name
 
 
+## Angle on the ring for a point `h` in the lap. Lap start is at the top.
 func _angle(h: float) -> float:
-	return -PI / 2 + TAU * h / Game.config.boil_over_at
+	return -PI / 2 + TAU * h / Game.config.lap_time
 
 
 func _draw() -> void:
@@ -252,29 +288,47 @@ func _draw() -> void:
 	draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 64, Color(0, 0, 0, 0.4), ring_width, true)
 	if is_empty():
 		return
-	# Zones round the ring: weak (grey), the gold band, then red. Full circle = boils over.
-	var warn := warning_at()
-	var in_warning := is_boiling() and heat >= warn
-	var flash := in_warning and fmod(_time * 8.0, 2.0) < 1.0
-	draw_arc(Vector2.ZERO, ring_radius, _angle(cfg.weak_from), _angle(warn), 48, Color(weak_color, 0.2), ring_width, true)
+	# The same zones every lap: grey (weak), the gold band, then red (boils over if pulled).
+	var red := red_at()
+	var phase := _phase(heat)
+	var in_red := is_boiling() and phase >= red and heat >= cfg.weak_from
+	var flash := fmod(_time * 8.0, 2.0) < 1.0
+	var grey_from := cfg.weak_from if laps_done() == 0 else 0.0
+	draw_arc(Vector2.ZERO, ring_radius, _angle(grey_from), _angle(red), 48, Color(weak_color, 0.2), ring_width, true)
 	draw_arc(Vector2.ZERO, ring_radius, _angle(band_start), _angle(band_end), 16, Color(perfect_color, 0.85), ring_width, true)
-	var red := Color(warning_color, 0.9 if flash else 0.45)
-	draw_arc(Vector2.ZERO, ring_radius, _angle(warn), _angle(cfg.boil_over_at), 16, red, ring_width, true)
-	if in_warning:
-		draw_arc(Vector2.ZERO, ring_radius + ring_width, 0.0, TAU, 64, Color(warning_color, 0.6 if flash else 0.2), 5.0, true)
+	var red_alpha := (0.9 if flash else 0.6) if in_red else 0.45
+	draw_arc(Vector2.ZERO, ring_radius, _angle(red), _angle(cfg.lap_time), 16, Color(warning_color, red_alpha), ring_width, true)
+	if is_boiling() and (in_red or is_last_lap()):
+		var alpha := 0.6 if flash else 0.2
+		if not in_red:
+			alpha *= 0.5
+		draw_arc(Vector2.ZERO, ring_radius + ring_width, 0.0, TAU, 64, Color(warning_color, alpha), 5.0, true)
 	if quality() == Potion.Quality.PERFECT:
 		var glow := 0.35 + 0.25 * sin(_time * 12.0)
 		draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 64, Color(perfect_color, glow), ring_width * 2.2, true)
 	if heat > 0.0:
 		var fill := raw_color
 		match quality():
-			Potion.Quality.WEAK: fill = warning_color if in_warning or overcooked else weak_color
+			Potion.Quality.WEAK: fill = warning_color if in_red or overcooked else weak_color
 			Potion.Quality.PERFECT: fill = perfect_color
-		draw_arc(Vector2.ZERO, ring_radius, _angle(0.0), _angle(heat), 48, fill, ring_width * 0.4, true)
-		var needle := Vector2.from_angle(_angle(heat)) * ring_radius
+		# A short fading trail behind the needle so it reads as spinning, not filling up.
+		if is_boiling():
+			for i in range(TRAIL_DOTS, 0, -1):
+				var back := heat - TRAIL * i / TRAIL_DOTS
+				if back <= 0.0:
+					continue
+				var k := 1.0 - float(i) / (TRAIL_DOTS + 1)
+				var at := Vector2.from_angle(_angle(_phase(back))) * ring_radius
+				draw_circle(at, ring_width * 0.45 * k, Color(fill, 0.5 * k))
+		var needle := Vector2.from_angle(_angle(phase)) * ring_radius
 		draw_circle(needle, ring_width * 0.75, Color(0.1, 0.08, 0.15))
 		draw_circle(needle, ring_width * 0.5, fill.lightened(0.3))
 	if is_boiling():
+		# Lap pips beside the ring: one goes dark per finished lap.
+		for i in cfg.boil_over_laps:
+			var left := i >= laps_done()
+			var color := (warning_color if is_last_lap() else Color.WHITE) if left else Color(0, 0, 0, 0.35)
+			draw_circle(Vector2(ring_radius + 22.0, -16.0 + i * 16.0), 5.0, color)
 		# Steam puffs above the pot while it's on the boil.
 		for i in 3:
 			var t := fmod(_time * 1.5 + i / 3.0, 1.0)
