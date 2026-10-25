@@ -18,7 +18,7 @@ Drop a PNG here with one of these names and it replaces the grey-box placeholder
 | `bandage.png` | 84×28 | 168×56 | |
 | `icon_red.png` … `icon_purple.png` (6) | 48×48 (status card) | 96×96 (or larger, same proportions) | yes |
 | `icon_heart.png` | 30×28 | 60×56 | yes |
-| `potion_blob.png` (flying potion) | 36×36 | 72×72 | yes |
+| `potion_blob.png` (held / flying potion) | 36×36 | 72×72 | yes |
 
 Sizes and positions can be changed in the Godot editor: select the node and edit `size` in the Inspector.
 

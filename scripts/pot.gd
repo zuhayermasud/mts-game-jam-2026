@@ -1,10 +1,11 @@
 class_name Pot
 extends Clickable
 ## The pot on the counter. Pours land instantly and every pour starts the boil from zero:
-## the needle laps the ring by itself, passing the same zones every lap. Left-click anywhere to
+## the needle sweeps along the ring by itself and bounces back and forth between the start and
+## the red end, passing the same zones every sweep. Left-click anywhere to
 ## pull the brew: in the gold band it's perfect, on grey it's weak (overcooked once the
 ## needle has passed the band), and in the red section it boils over and empties.
-## Left alone, it boils over at the end of the last lap (pips count the laps left).
+## Left alone, it boils over at the end of the last sweep (pips count the sweeps left).
 ## The band rolls to a random spot on every pour and narrows on later shifts.
 ## Right-click dumps the pot.
 
@@ -18,6 +19,8 @@ const SPOON_REST := Vector2(30, -62)
 ## Seconds of needle trail drawn behind the dot.
 const TRAIL := 0.25
 const TRAIL_DOTS := 6
+## Gap at the top of the ring between the start and the red end.
+const RING_GAP := PI / 4
 
 @export var ring_radius := 95.0
 @export var ring_width := 14.0
@@ -83,23 +86,23 @@ func quality() -> int:
 	return Potion.Quality.PERFECT if _in_band() else Potion.Quality.WEAK
 
 
-## Point in each lap where the red section starts.
+## Point along the sweep where the red section starts.
 func red_at() -> float:
-	return Game.config.lap_time - Game.config.red_width
+	return Game.config.sweep_time - Game.config.red_width
 
 
-## Heat at which a pot left alone boils over: the end of the last lap.
+## Heat at which a pot left alone boils over: the end of the last sweep.
 func boil_over_at() -> float:
-	return Game.config.lap_time * Game.config.boil_over_laps
+	return Game.config.sweep_time * Game.config.boil_over_sweeps
 
 
-## Laps the needle has finished.
-func laps_done() -> int:
-	return int(heat / Game.config.lap_time)
+## Sweeps the needle has finished.
+func sweeps_done() -> int:
+	return int(heat / Game.config.sweep_time)
 
 
-func is_last_lap() -> bool:
-	return laps_done() >= Game.config.boil_over_laps - 1
+func is_last_sweep() -> bool:
+	return sweeps_done() >= Game.config.boil_over_sweeps - 1
 
 
 ## Returns false (and shakes) if the pot is full. Starts the boil again from zero.
@@ -187,16 +190,18 @@ func _process(delta: float) -> void:
 		_refresh()
 	if zone == "red":
 		hit.rotation = sin(_time * 70.0) * 0.09
-	elif is_last_lap():
+	elif is_last_sweep():
 		hit.rotation = sin(_time * 40.0) * 0.05
 	else:
 		hit.rotation = sin(_time * 22.0) * 0.03
 	queue_redraw()
 
 
-## Where `h` falls in the current lap.
+## Where the needle is along the ring at heat `h`: out to the red end, then back, and so on.
 func _phase(h: float) -> float:
-	return fmod(h, Game.config.lap_time)
+	var sweep := Game.config.sweep_time
+	var m := fmod(h, sweep * 2.0)
+	return m if m < sweep else sweep * 2.0 - m
 
 
 func _in_band() -> bool:
@@ -215,7 +220,7 @@ func _zone_at(h: float) -> String:
 	return "after" if h > band_end else "before"
 
 
-## Rolls a new gold band at a random spot in the lap, always ending before the red section.
+## Rolls a new gold band at a random spot along the sweep, always ending before the red section.
 func _roll_band() -> void:
 	var cfg := Game.config
 	var width := cfg.band_width(potion(), Game.shift)
@@ -278,27 +283,28 @@ func _refresh() -> void:
 		label.text = "%s · Weak" % potion_name
 
 
-## Angle on the ring for a point `h` in the lap. Lap start is at the top.
+## Angle on the ring for a point `h` along the sweep. The ring has a gap at the top
+## between the start and the red end, so you can see where the needle bounces.
 func _angle(h: float) -> float:
-	return -PI / 2 + TAU * h / Game.config.lap_time
+	return -PI / 2 + RING_GAP * 0.5 + (TAU - RING_GAP) * h / Game.config.sweep_time
 
 
 func _draw() -> void:
 	var cfg := Game.config
-	draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 64, Color(0, 0, 0, 0.4), ring_width, true)
+	draw_arc(Vector2.ZERO, ring_radius, _angle(0.0), _angle(cfg.sweep_time), 64, Color(0, 0, 0, 0.4), ring_width, true)
 	if is_empty():
 		return
-	# The same zones every lap: grey (weak), the gold band, then red (boils over if pulled).
+	# The same zones every sweep: grey (weak), the gold band, then red (boils over if pulled).
 	var red := red_at()
 	var phase := _phase(heat)
 	var in_red := is_boiling() and phase >= red and heat >= cfg.weak_from
 	var flash := fmod(_time * 8.0, 2.0) < 1.0
-	var grey_from := cfg.weak_from if laps_done() == 0 else 0.0
+	var grey_from := cfg.weak_from if sweeps_done() == 0 else 0.0
 	draw_arc(Vector2.ZERO, ring_radius, _angle(grey_from), _angle(red), 48, Color(weak_color, 0.2), ring_width, true)
 	draw_arc(Vector2.ZERO, ring_radius, _angle(band_start), _angle(band_end), 16, Color(perfect_color, 0.85), ring_width, true)
 	var red_alpha := (0.9 if flash else 0.6) if in_red else 0.45
-	draw_arc(Vector2.ZERO, ring_radius, _angle(red), _angle(cfg.lap_time), 16, Color(warning_color, red_alpha), ring_width, true)
-	if is_boiling() and (in_red or is_last_lap()):
+	draw_arc(Vector2.ZERO, ring_radius, _angle(red), _angle(cfg.sweep_time), 16, Color(warning_color, red_alpha), ring_width, true)
+	if is_boiling() and (in_red or is_last_sweep()):
 		var alpha := 0.6 if flash else 0.2
 		if not in_red:
 			alpha *= 0.5
@@ -324,10 +330,10 @@ func _draw() -> void:
 		draw_circle(needle, ring_width * 0.75, Color(0.1, 0.08, 0.15))
 		draw_circle(needle, ring_width * 0.5, fill.lightened(0.3))
 	if is_boiling():
-		# Lap pips beside the ring: one goes dark per finished lap.
-		for i in cfg.boil_over_laps:
-			var left := i >= laps_done()
-			var color := (warning_color if is_last_lap() else Color.WHITE) if left else Color(0, 0, 0, 0.35)
+		# Pips beside the ring: one goes dark per finished sweep.
+		for i in cfg.boil_over_sweeps:
+			var left := i >= sweeps_done()
+			var color := (warning_color if is_last_sweep() else Color.WHITE) if left else Color(0, 0, 0, 0.35)
 			draw_circle(Vector2(ring_radius + 22.0, -16.0 + i * 16.0), 5.0, color)
 		# Steam puffs above the pot while it's on the boil.
 		for i in 3:

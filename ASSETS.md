@@ -18,9 +18,9 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] 🎨 Ingredient critters ×3 (red, yellow, blue blobs). Reuse the face set: idle, squeezed, sweating, cheering. Squash and squirt are ⚙️
 - [ ] 🎨 Pot + 🧪 liquid layer, and a burner or flame base under it
 - [ ] 🎨 Spoon (circles in the pot while it boils)
-- [ ] 🧪 Potion blob (`potion_blob.png`, 36×36, flies from the pot to a patient; the arc is ⚙️)
+- [ ] 🧪 Potion blob (`potion_blob.png`, 36×36, rides on the cursor once pulled and flies to a patient; the arc is ⚙️)
 - [ ] ⚙️ Flame and bubbles
-- [ ] ⚙️ Boil ring: grey weak arc, moving gold band, red arc (pull there = boils over), looping needle with a trail, lap pips (3 laps = boils over)
+- [ ] ⚙️ Boil ring: grey weak arc, moving gold band, red arc (pull there = boils over), needle that bounces between the ends with a trail, sweep pips (3 sweeps = boils over)
 - [ ] Potion name label under the pot ("Green Potion · Perfect!")
 - [ ] 🎨 (on hold) BOTTLE button, shelf with 2 slots, bottle + 🧪 liquid
 - [ ] 🎨 Sink built into the workbench

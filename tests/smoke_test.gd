@@ -68,14 +68,14 @@ func _run() -> void:
 	_check(pot.quality() == Potion.Quality.WEAK and pot.overcooked, "pull after the band = weak, overcooked")
 	pot.dump()
 
-	# The needle loops: the band comes round again next lap.
+	# The needle bounces off the red end and sweeps back through the band.
 	pot.pour(Potion.Kind.RED)
-	_boil_to(pot, cfg.lap_time + (pot.band_start + pot.band_end) * 0.5)
-	_check(pot.quality() == Potion.Quality.PERFECT, "the gold band comes round again on the next lap")
+	_boil_to(pot, cfg.sweep_time * 2.0 - (pot.band_start + pot.band_end) * 0.5)
+	_check(pot.quality() == Potion.Quality.PERFECT, "the needle bounces back through the gold band")
 	pot.dump()
 	pot.pour(Potion.Kind.RED)
-	_boil_to(pot, cfg.lap_time + pot.band_start * 0.5)
-	_check(pot.quality() == Potion.Quality.WEAK and pot.overcooked, "grey on a later lap = weak, overcooked")
+	_boil_to(pot, cfg.sweep_time * 2.0 - pot.band_start * 0.5)
+	_check(pot.quality() == Potion.Quality.WEAK and pot.overcooked, "grey on the way back = weak, overcooked")
 	pot.dump()
 
 	# A left click anywhere pulls the pot.
@@ -94,12 +94,12 @@ func _run() -> void:
 	_check(pot.is_boiling() and pot._zone == "red", "the needle reaches the red section")
 	_check(not pot.pull() and pot.is_empty(), "pulling in the red boils the pot over")
 
-	# Left alone it boils over at the end of the last lap.
+	# Left alone it boils over at the end of the last sweep.
 	pot.pour(Potion.Kind.RED)
 	pot._process(pot.boil_over_at() - 0.05)
-	_check(pot.is_boiling() and pot.is_last_lap(), "still boiling on the last lap")
+	_check(pot.is_boiling() and pot.is_last_sweep(), "still boiling on the last sweep")
 	pot._process(0.1)
-	_check(pot.is_empty(), "after %d laps the pot boils over and empties" % cfg.boil_over_laps)
+	_check(pot.is_empty(), "after %d sweeps the pot boils over and empties" % cfg.boil_over_sweeps)
 
 	# Shift 1 opens one chair.
 	var patient := await _next_seated(main)

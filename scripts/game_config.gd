@@ -5,11 +5,12 @@ extends Resource
 
 @export_group("Brewing")
 ## Heat is seconds on the boil since the last pour (the pot boils by itself).
-## The needle laps the ring once every lap_time seconds, passing the same zones each lap.
-## Clicking the pot before weak_from (first lap only) does nothing: it's still raw.
+## The needle sweeps out along the ring in sweep_time seconds, bounces off the red end and
+## sweeps back, then bounces off the start, passing the same zones on every sweep.
+## Pulling before weak_from (first sweep only) does nothing: it's still raw.
 @export var weak_from := 0.4
-@export var lap_time := 3.2
-## The gold (perfect) band starts anywhere in this range of the lap, rolled fresh on every pour.
+@export var sweep_time := 3.2
+## The gold (perfect) band starts anywhere in this range of the sweep, rolled fresh on every pour.
 ## It's clamped so it always ends before the red section.
 @export var band_start_min := 0.8
 @export var band_start_max := 2.4
@@ -19,10 +20,10 @@ extends Resource
 ## The band narrows this much every shift, down to band_width_min.
 @export var band_shrink_per_shift := 0.06
 @export var band_width_min := 0.2
-## The last red_width seconds of every lap are red: pulling there boils the pot over.
+## The last red_width seconds of the sweep (the far end) are red: pulling there boils the pot over.
 @export var red_width := 0.6
-## Left alone, the pot boils over at the end of this many laps.
-@export var boil_over_laps := 3
+## Left alone, the pot boils over at the end of this many sweeps (out, back, out = 3).
+@export var boil_over_sweeps := 3
 ## Pours the pot holds. One more is blocked.
 @export var max_pours := 2
 

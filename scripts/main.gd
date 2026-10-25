@@ -21,6 +21,10 @@ var game_over := false
 var _open: Array[Patient] = []
 var _arrival_timer := 0.0
 var _hearts: Array[ArtSprite] = []
+## The pulled brew, carried on the cursor until you right-click a patient.
+var _held: ArtSprite
+## Wrong serves still flying back to the cursor. The held blob hides until they land.
+var _bouncing := 0
 
 @onready var cfg := Game.config
 @onready var pot: Pot = $Pot
@@ -49,10 +53,16 @@ func _ready() -> void:
 	lives = cfg.lives
 	_build_hearts()
 	_add_score(0)
+	_held = _make_blob()
+	_held.visible = false
 	_start_shift(1)
 
 
 func _process(delta: float) -> void:
+	_held.visible = pot.can_serve() and _bouncing == 0 and not game_over
+	if _held.visible:
+		_held.global_position = get_global_mouse_position()
+		_held.self_modulate = cfg.potion_color(pot.potion())
 	if game_over:
 		return
 	var brews: Array[int] = []
@@ -148,7 +158,7 @@ func _serve(p: Patient) -> void:
 	if result == Patient.Serve.REFUSED:
 		_fly_potion(p, kind, true)
 		_add_score(cfg.score_wrong)
-		_toast("Wrong potion −%d s · back in the pot" % cfg.wrong_serve_penalty, cfg.red.lightened(0.3))
+		_toast("Wrong potion −%d s · it bounces back" % cfg.wrong_serve_penalty, cfg.red.lightened(0.3))
 		return
 	pot.take()
 	_fly_potion(p, kind, false)
@@ -158,27 +168,36 @@ func _serve(p: Patient) -> void:
 		_toast("+%d s borrowed (next +%d s)" % [cfg.borrow_for(n - 1), cfg.borrow_for(n)], cfg.purple.lightened(0.3))
 
 
-## A blob of potion arcs from the pot to `p`. With `bounce` it arcs back into the pot.
+## The held blob arcs from the cursor to `p`. With `bounce` it arcs back to the cursor.
 func _fly_potion(p: Patient, kind: int, bounce: bool) -> void:
-	var blob := ArtSprite.new()
-	blob.art_name = "potion_blob"
-	blob.shape = ArtSprite.Shape.ELLIPSE
-	blob.size = Vector2(36, 36)
-	blob.placeholder_color = Color.WHITE
+	var blob := _make_blob()
 	blob.self_modulate = cfg.potion_color(kind)
-	blob.show_name = false
-	blob.z_index = 10
-	add_child(blob)
-	var from := pot.global_position + Vector2(0, -50)
+	var from := get_global_mouse_position()
 	var to := p.global_position + Vector2(0, -60)
 	blob.global_position = from
 	var t := blob.create_tween()
 	_tween_arc(t, blob, from, to)
 	t.tween_callback(Sfx.play.bind("splash"))
 	if bounce:
+		_bouncing += 1
 		_tween_arc(t, blob, to, from)
-		t.tween_callback(pot._splash)
+		t.tween_callback(func():
+			_bouncing -= 1
+			_held.scale = Vector2(1.3, 0.75)
+			_held.create_tween().tween_property(_held, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_ELASTIC))
 	t.tween_callback(blob.queue_free)
+
+
+func _make_blob() -> ArtSprite:
+	var blob := ArtSprite.new()
+	blob.art_name = "potion_blob"
+	blob.shape = ArtSprite.Shape.ELLIPSE
+	blob.size = Vector2(36, 36)
+	blob.placeholder_color = Color.WHITE
+	blob.show_name = false
+	blob.z_index = 10
+	add_child(blob)
+	return blob
 
 
 func _tween_arc(t: Tween, blob: Node2D, from: Vector2, to: Vector2) -> void:
