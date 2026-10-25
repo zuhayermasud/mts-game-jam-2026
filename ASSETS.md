@@ -18,6 +18,7 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] 🎨 Ingredient critters ×3 (red, yellow, blue blobs). Reuse the face set: idle, squeezed, sweating, cheering. Squash and squirt are ⚙️
 - [ ] 🎨 Pot + 🧪 liquid layer, and a burner or flame base under it
 - [ ] 🎨 Spoon (circles in the pot while it boils)
+- [ ] 🧪 Potion blob (`potion_blob.png`, 36×36, flies from the pot to a patient; the arc is ⚙️)
 - [ ] ⚙️ Flame and bubbles
 - [ ] ⚙️ Boil ring: grey weak arc, moving gold band, red warning arc, needle (full circle = boils over)
 - [ ] Potion name label under the pot ("Green Potion · Perfect!")
@@ -62,7 +63,7 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] Hover scale-up on everything you can click
 
 ## 6. Audio
-- [ ] SFX: jar pour, flask clear, bubbling (repeats while boiling), "in the gold" ding, boil-over warning rattle, perfect pull chime, overcooked hiss, pull potion, give potion, cure jingle, weak-cure "meh", patient arrives, emergency alarm, clock warning tick, death, shift start, game over, button click
+- [ ] SFX: jar pour, flask clear, bubbling (repeats while boiling), "in the gold" ding, boil-over warning rattle, perfect pull chime, overcooked hiss, pull potion, give potion, potion splash (lands on a patient or back in the pot), cure jingle, weak-cure "meh", patient arrives, emergency alarm, clock warning tick, death, shift start, game over, button click
 - [ ] Music: one loop that speeds up or gets more intense as danger rises
 - [ ] Theme cue: a distinct "borrowed time" sound when you give a weak potion
 

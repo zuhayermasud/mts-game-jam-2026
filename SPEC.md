@@ -30,7 +30,7 @@ A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking
 
 ### Patients
 - **Up to 3 chairs, all clocks tick at once.** Chairs open per shift (1, then 2, then 3). Patients sit down one at a time, a short gap apart, whenever a chair is free.
-- **Click a patient to serve them** the brew in the pot. There is no GIVE button.
+- **Click a patient to serve them** the brew in the pot. There is no GIVE button. If the pot is still boiling, the click pulls it at that moment and serves it, in one click. The potion arcs over to the patient as a tinted blob and they react when it lands (the outcome is decided on the click).
 - **A patient's skin colour is their cure.** Bandaged patients show their bandage.
 - **Top status bar:** one card per open chair, directly above it, showing the cure colour (icon and name), the ailment, a clock bar with seconds, and a status line (`Weak dose: +10s`, `EMERGENCY`, `Borrowed ×N · next +Xs`, `Bandaged · next +Xs`, then `Cured!` / `Back later, worse` / `Lost` as they leave). The bar is green, purple once they've borrowed, and flashes red under the critical threshold. A card's outline glows gold when the pot holds a set brew that's that patient's cure, and is red for an emergency patient. Empty chairs say "Next patient…".
 - Tiers: **primary** (1 colour), **secondary** (2 primaries: orange, green, purple), **boss** (two potions served in order; the bubble shows both).
@@ -50,7 +50,7 @@ A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking
 - Why: a timing skill on every brew (the band moves, so you have to watch the pot), while the pot keeps boiling when your attention is on the patients.
 - Pour results: 1 pour = that primary. Same colour twice = that primary. Two different primaries = their secondary. A third pour is blocked, with a "full" sound.
 - Two actions when a brew is ready:
-  - **Click a patient** to serve it to them.
+  - **Click a patient** to serve it to them (this also pulls a boiling pot).
   - **BOTTLE** pours it into a bottle on the **2-slot shelf** beside the pot. Bottling stops the cooking and freezes the quality. Bottles never decay.
 - Click a bottle on the shelf to serve it. This is how you brew ahead for waiting patients and bosses.
 - **Dumping:** right-click the pot or a bottle, or click the sink (no toolbar).
@@ -65,7 +65,7 @@ A doctor runs a busy potion clinic. Patients arrive with lifespan clocks ticking
 - No global debt meter. The cascade comes from bandaged patients filling up the queue.
 
 ### Mistakes
-- **Wrong potion served:** the patient refuses (grimace and "ugh" sound), the potion is wasted, and their clock loses **2 s**.
+- **Wrong potion served:** the patient refuses (grimace and "ugh" sound) and their clock loses **2 s**. The potion bounces back into the pot, so you can still give it to the right patient.
 
 ### Teaching
 - A **recipe poster on the clinic wall** (R+Y=O, Y+B=G, R+B=P, with icons), plus a **recipe book you can open** for the full chart. Time keeps running while it's open.
@@ -120,6 +120,7 @@ All of these live in one config resource.
 - **Done (2026-10-24):** two pots on ON/OFF burner switches (click a pot to select it), longer perfect boil, tighter clocks, emergency patients.
 - **Done (2026-10-25):** one pot again: hold to stir, let go in a gold band that moves every pour (narrower for secondaries), overcooked and boil-over warning, borrowing with interest (+10/+6/+3 s).
 - **Done (2026-10-25):** hold-to-stir replaced by auto boil and click-to-pull; the gold band lands anywhere from 1–3 s, starts smaller (0.5 s / 0.4 s) and shrinks 0.06 s per shift. Waiting on a playtest: the band should feel readable, early/late pulls should land weak, and three chairs on shift 3 should be manageable with loans.
+- **Done (2026-10-26):** handover polish: the potion flies from the pot to the patient, clicking a patient pulls a boiling pot and serves it in one click, and a wrong potion bounces back into the pot (−2 s).
 - **Next:** sink, bosses, recipe poster and book, then title, pause and shift cards.
 - Audio is waiting on the user to choose a sound-generator project.
 

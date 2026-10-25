@@ -18,7 +18,8 @@ Drop a PNG here with one of these names and it replaces the grey-box placeholder
 | `bandage.png` | 84×28 | 168×56 | |
 | `icon_red.png` … `icon_purple.png` (6) | 48×48 (status card) | 96×96 (or larger, same proportions) | yes |
 | `icon_heart.png` | 30×28 | 60×56 | yes |
+| `potion_blob.png` (flying potion) | 36×36 | 72×72 | yes |
 
 Sizes and positions can be changed in the Godot editor: select the node and edit `size` in the Inspector.
 
-Sounds work the same way: put `res://audio/<name>.ogg` (or `.wav`) in `audio/` and `Sfx.play("<name>")` picks it up. These names are already called: `pour`, `pot_full`, `dump`, `bubble`, `brew_ready`, `brew_perfect`, `boil_warning`, `boil_over`, `give`, `refuse`, `borrow`, `cure`, `bandaged`, `death`, `patient_arrive`, `emergency`, `shift_start`, `game_over`.
+Sounds work the same way: put `res://audio/<name>.ogg` (or `.wav`) in `audio/` and `Sfx.play("<name>")` picks it up. These names are already called: `pour`, `pot_full`, `dump`, `bubble`, `brew_ready`, `brew_perfect`, `boil_warning`, `boil_over`, `give`, `refuse`, `splash`, `borrow`, `cure`, `bandaged`, `death`, `patient_arrive`, `emergency`, `shift_start`, `game_over`.

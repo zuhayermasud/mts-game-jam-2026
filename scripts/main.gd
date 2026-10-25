@@ -6,6 +6,9 @@ const BODY_ARTS: Array[String] = ["patient_body_a", "patient_body_b"]
 ## Which chairs (left, middle, right) open for 1, 2 or 3 chairs.
 const CHAIR_LAYOUTS := [[1], [0, 2], [0, 1, 2]]
 const HEART_SPACING := 40.0
+## How long the potion flies from the pot to a patient. Cosmetic: the serve is decided on the click.
+const FLIGHT_TIME := 0.25
+const FLIGHT_ARC := 120.0
 
 var shift := 0
 var score := 0
@@ -113,25 +116,61 @@ func _on_patient_clicked(button: MouseButton, p: Patient) -> void:
 	if pot.is_empty():
 		_toast("The pot is empty", Color.WHITE)
 		return
-	if not pot.can_serve():
-		_toast("Click the pot to pull the brew", Color.WHITE)
+	# Clicking a patient while it boils pulls the brew right now and serves it.
+	if pot.is_boiling() and not pot.pull():
+		_toast("Still heating…", Color.WHITE)
 		return
 	_serve(p)
 
 
-## Gives the pot's brew to `p`.
+## Gives the pot's brew to `p`. A wrong potion is refused and bounces back into the pot.
 func _serve(p: Patient) -> void:
-	var result := p.serve(pot.potion(), pot.quality())
-	pot.take()
+	var kind := pot.potion()
+	var result := p.serve(kind, pot.quality(), FLIGHT_TIME)
 	Sfx.play("give")
-	match result:
-		Patient.Serve.BORROWED:
-			borrows += 1
-			var n := p.info.borrows
-			_toast("+%d s borrowed (next +%d s)" % [cfg.borrow_for(n - 1), cfg.borrow_for(n)], cfg.purple.lightened(0.3))
-		Patient.Serve.REFUSED:
-			_add_score(cfg.score_wrong)
-			_toast("Ugh! Wrong potion −%d s" % cfg.wrong_serve_penalty, cfg.red.lightened(0.3))
+	if result == Patient.Serve.REFUSED:
+		_fly_potion(p, kind, true)
+		_add_score(cfg.score_wrong)
+		_toast("Wrong potion −%d s · back in the pot" % cfg.wrong_serve_penalty, cfg.red.lightened(0.3))
+		return
+	pot.take()
+	_fly_potion(p, kind, false)
+	if result == Patient.Serve.BORROWED:
+		borrows += 1
+		var n := p.info.borrows
+		_toast("+%d s borrowed (next +%d s)" % [cfg.borrow_for(n - 1), cfg.borrow_for(n)], cfg.purple.lightened(0.3))
+
+
+## A blob of potion arcs from the pot to `p`. With `bounce` it arcs back into the pot.
+func _fly_potion(p: Patient, kind: int, bounce: bool) -> void:
+	var blob := ArtSprite.new()
+	blob.art_name = "potion_blob"
+	blob.shape = ArtSprite.Shape.ELLIPSE
+	blob.size = Vector2(36, 36)
+	blob.placeholder_color = Color.WHITE
+	blob.self_modulate = cfg.potion_color(kind)
+	blob.show_name = false
+	blob.z_index = 10
+	add_child(blob)
+	var from := pot.global_position + Vector2(0, -50)
+	var to := p.global_position + Vector2(0, -60)
+	blob.global_position = from
+	var t := blob.create_tween()
+	_tween_arc(t, blob, from, to)
+	t.tween_callback(Sfx.play.bind("splash"))
+	if bounce:
+		_tween_arc(t, blob, to, from)
+		t.tween_callback(pot._splash)
+	t.tween_callback(blob.queue_free)
+
+
+func _tween_arc(t: Tween, blob: Node2D, from: Vector2, to: Vector2) -> void:
+	var step := func(k: float):
+		blob.global_position = from.lerp(to, k) + Vector2(0, -sin(k * PI) * FLIGHT_ARC)
+		# A little stretch at the top of the arc, back to round as it lands.
+		var s := 1.0 + 0.25 * sin(k * PI)
+		blob.scale = Vector2(2.0 - s, s)
+	t.tween_method(step, 0.0, 1.0, FLIGHT_TIME)
 
 
 func _on_patient_resolved(outcome: Patient.Outcome, p: Patient) -> void:

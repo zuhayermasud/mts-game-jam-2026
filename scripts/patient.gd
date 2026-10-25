@@ -68,21 +68,25 @@ func arrive(patient: PatientInfo) -> void:
 		t.tween_callback(func(): active = true))
 
 
-func serve(kind: int, quality: int) -> Serve:
+## The outcome is decided now. Only the reaction waits `react_delay` seconds,
+## so it can land with the flying potion.
+func serve(kind: int, quality: int, react_delay := 0.0) -> Serve:
 	if kind != info.cure:
 		time_left = maxf(time_left - Game.config.wrong_serve_penalty, 0.0)
-		Sfx.play("refuse")
-		_shake()
+		_after(react_delay, func():
+			Sfx.play("refuse")
+			_shake())
 		return Serve.REFUSED
 	if quality == Potion.Quality.PERFECT:
-		_resolve(Outcome.CURED)
+		_resolve(Outcome.CURED, react_delay)
 		return Serve.CURED
 	info.borrows += 1
 	time_left += Game.config.borrow_for(info.borrows - 1)
 	clock_max = maxf(clock_max, time_left)
-	Sfx.play("borrow")
-	body.scale = Vector2(1.15, 0.9)
-	create_tween().tween_property(body, "scale", Vector2.ONE, 0.4).set_trans(Tween.TRANS_ELASTIC)
+	_after(react_delay, func():
+		Sfx.play("borrow")
+		body.scale = Vector2(1.15, 0.9)
+		create_tween().tween_property(body, "scale", Vector2.ONE, 0.4).set_trans(Tween.TRANS_ELASTIC))
 	return Serve.BORROWED
 
 
@@ -117,16 +121,18 @@ func _set_face(art: String) -> void:
 		face.art_name = art
 
 
-func _resolve(result: Outcome) -> void:
+func _resolve(result: Outcome, react_delay := 0.0) -> void:
 	active = false
 	outcome = result
 	resolved.emit(result)
 	var down := _home + Vector2(0, 260)
 	match result:
 		Outcome.CURED:
-			_set_face("face_cured")
-			Sfx.play("cure")
 			_move(func(t: Tween):
+				t.tween_interval(react_delay)
+				t.tween_callback(func():
+					_set_face("face_cured")
+					Sfx.play("cure"))
 				t.tween_property(self, "scale", Vector2.ONE * 1.15, 0.12)
 				t.tween_property(self, "scale", Vector2.ONE, 0.15)
 				t.tween_interval(0.25)
@@ -149,6 +155,14 @@ func _resolve(result: Outcome) -> void:
 		visible = false
 		occupied = false
 		gone.emit())
+
+
+## Calls `fn` after `delay` seconds, or right away if there's no delay.
+func _after(delay: float, fn: Callable) -> void:
+	if delay <= 0.0:
+		fn.call()
+	else:
+		get_tree().create_timer(delay).timeout.connect(fn)
 
 
 func _move(build: Callable) -> void:

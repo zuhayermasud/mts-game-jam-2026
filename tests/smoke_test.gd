@@ -87,6 +87,25 @@ func _run() -> void:
 	_check(patient.serve(wrong, Potion.Quality.PERFECT) == Patient.Serve.REFUSED, "wrong potion refused")
 	_check(patient.time_left <= before - cfg.wrong_serve_penalty + 0.01, "wrong potion costs time")
 
+	# Served from the pot, a wrong potion bounces back: still in the pot, quality kept.
+	pot.pour(wrong)
+	_boil_to(pot, (pot.band_start + pot.band_end) * 0.5)
+	var set_quality := pot.set_quality
+	before = patient.time_left
+	main._serve(patient)
+	_check(patient.time_left <= before - cfg.wrong_serve_penalty + 0.01, "wrong serve from the pot costs time")
+	_check(pot.potion() == wrong and pot.set_quality == set_quality, "wrong potion stays in the pot")
+	pot.dump()
+
+	# Clicking a patient while the pot is still raw does nothing.
+	pot.pour(cure)
+	pot._process(cfg.weak_from * 0.5)
+	before = patient.time_left
+	main._on_patient_clicked(MOUSE_BUTTON_LEFT, patient)
+	_check(pot.is_boiling() and patient.active and patient.time_left == before and patient.info.borrows == 0,
+			"clicking a patient while raw does nothing")
+	pot.dump()
+
 	# Weak correct potions borrow with interest: +10, +6, +3, then +3.
 	_weak(pot, cure)
 	before = patient.time_left
@@ -115,9 +134,11 @@ func _run() -> void:
 	patient = await _next_seated(main)
 	var score_before: int = main.score
 	pot.pour(patient.info.cure)
-	_boil_to(pot, (pot.band_start + pot.band_end) * 0.5)
-	main._serve(patient)
-	_check(main.score >= score_before + cfg.score_perfect and pot.is_empty(), "perfect brew cures and scores")
+	pot._process((pot.band_start + pot.band_end) * 0.5)
+	_check(pot.is_boiling(), "pot still on the boil before the click")
+	main._on_patient_clicked(MOUSE_BUTTON_LEFT, patient)
+	_check(patient.outcome == Patient.Outcome.CURED and pot.is_empty(), "clicking a patient pulls the boiling pot and serves it")
+	_check(main.score >= score_before + cfg.score_perfect, "perfect brew cures and scores")
 
 	# Timeout without a borrow -> a life lost, but the run goes on.
 	await patient.gone
