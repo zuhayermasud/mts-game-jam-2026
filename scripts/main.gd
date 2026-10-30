@@ -116,13 +116,7 @@ func _ready() -> void:
 	if Game.show_title:
 		get_tree().paused = true
 		$HUD/Root.modulate.a = 0.0
-		if Game.show_intro:
-			Game.show_intro = false
-			var intro := Intro.new()
-			add_child(intro)
-			intro.finished.connect(_open_title)
-		else:
-			_open_title()
+		_open_title()
 	else:
 		_start_shift(1)
 
