@@ -4,39 +4,31 @@
 [ext_resource type="Script" path="res://scripts/art_sprite.gd" id="2_art"]
 
 [node name="Pot" type="Node2D" node_paths=PackedStringArray("hit")]
+texture_filter = 1
 script = ExtResource("1_pot")
 hit = NodePath("Body")
-hover_scale = 1.03
+hover_scale = 1.0
 
 [node name="Body" type="Node2D" parent="."]
 script = ExtResource("2_art")
 art_name = "pot"
-size = Vector2(150, 135)
+size = Vector2(160, 160)
 shape = 2
 placeholder_color = Color(0.35, 0.33, 0.4, 1)
 
 [node name="Liquid" type="Node2D" parent="Body"]
-position = Vector2(0, -40)
+position = Vector2(-1, -46)
 script = ExtResource("2_art")
-art_name = "pot_liquid"
-size = Vector2(110, 36)
+size = Vector2(52, 16)
 shape = 2
 placeholder_color = Color(1, 1, 1, 1)
-
-[node name="Spoon" type="Node2D" parent="Body"]
-position = Vector2(30, -62)
-rotation = 0.3
-script = ExtResource("2_art")
-art_name = "spoon"
-size = Vector2(22, 110)
-shape = 1
-placeholder_color = Color(0.72, 0.55, 0.38, 1)
+show_name = false
 
 [node name="Label" type="Label" parent="."]
 offset_left = -150.0
-offset_top = 96.0
+offset_top = 118.0
 offset_right = 150.0
-offset_bottom = 124.0
+offset_bottom = 146.0
 theme_override_font_sizes/font_size = 20
-text = "Squeeze a critter"
+text = "Pick a mushroom"
 horizontal_alignment = 1

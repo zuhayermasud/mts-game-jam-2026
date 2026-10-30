@@ -106,6 +106,11 @@ def main():
         silence(0.08),
         tone(0.14, 60, 40, attack=0.004, decay=0.05),
     ), peak=0.85)
+    # Down the drain: a wash of water and three falling glugs.
+    save("dump", mix(
+        noise(0.5, attack=0.01, decay=0.2, smooth=0.7),
+        then(*[then(tone(0.09, f, f * 0.5, attack=0.003, decay=0.03), silence(0.03)) for f in (380, 300, 220)]),
+    ), peak=0.6)
 
 
 if __name__ == "__main__":

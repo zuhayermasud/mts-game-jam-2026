@@ -4,3 +4,7 @@ extends Node
 
 var config: GameConfig = preload("res://config/game_config.tres")
 var shift := 1
+## Show the title menu when main loads. Retry and Restart turn it off, Home and Back turn it back on.
+var show_title := true
+## The cave intro plays once per launch, before the first title screen.
+var show_intro := true

@@ -10,17 +10,11 @@ hover_scale = 1.05
 
 [node name="Body" type="Node2D" parent="."]
 script = ExtResource("2_art")
-art_name = "patient_body_a"
-size = Vector2(190, 250)
+texture_filter = 1
+art_name = "creatures/creature_001"
+size = Vector2(224, 224)
 shape = 2
 placeholder_color = Color(1, 1, 1, 1)
-
-[node name="Face" type="Node2D" parent="Body"]
-position = Vector2(0, -45)
-script = ExtResource("2_art")
-art_name = "face_calm"
-size = Vector2(110, 68)
-placeholder_color = Color(0.9, 0.9, 0.92, 1)
 
 [node name="Bandage" type="Node2D" parent="Body"]
 visible = false
@@ -31,3 +25,13 @@ art_name = "bandage"
 size = Vector2(84, 28)
 shape = 0
 placeholder_color = Color(0.95, 0.9, 0.8, 1)
+
+[node name="Bubble" type="Node2D" parent="."]
+position = Vector2(33, -124)
+script = ExtResource("2_art")
+texture_filter = 1
+art_name = "ui/bubble_sad_sad"
+size = Vector2(96, 96)
+shape = 0
+placeholder_color = Color(1, 0.92, 0.82, 1)
+show_name = false

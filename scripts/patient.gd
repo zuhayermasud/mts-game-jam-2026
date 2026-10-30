@@ -1,7 +1,7 @@
 class_name Patient
 extends Clickable
 ## A patient in one of the chairs. Every seated patient's clock ticks at the same time.
-## Right-click them to serve the pot. Their status card at the top of the screen reads from here.
+## Click them to serve the pot. Their status card just under them reads from here.
 ## `resolved` fires the moment the outcome is decided (for score and lives),
 ## `gone` fires after the leave animation (the chair is free again).
 
@@ -22,14 +22,20 @@ var occupied := false
 ## How this visit ended, or -1 while it's still going. Shown on the card as they leave.
 var outcome := -1
 
+const SAD_BUBBLES := ["sad_sad", "sad_meh", "sad_worried"]
+const HAPPY_BUBBLES := ["happy_smile", "happy_grin", "happy_wink", "happy_cat", "happy_tongue", "happy_heart"]
+const ALERT_BUBBLE := "alert"
+
 var _home: Vector2
+var _bubble_name := ""
+var _bubble_tween: Tween
 var _time := randf() * TAU
 var _move_tween: Tween
 var _shake_tween: Tween
 
 @onready var body: ArtSprite = $Body
-@onready var face: ArtSprite = $Body/Face
 @onready var bandage: ArtSprite = $Body/Bandage
+@onready var bubble: ArtSprite = $Bubble
 
 
 func _ready() -> void:
@@ -45,6 +51,16 @@ func is_critical() -> bool:
 	return active and time_left <= Game.config.critical_seconds
 
 
+## 0 normally, rising steeply to 1 over the last danger_seconds of the clock
+## (to danger_normal_scale for non-emergencies). Drives the red vignette, shake and heartbeat.
+func danger() -> float:
+	var cfg := Game.config
+	if not active or time_left >= cfg.danger_seconds:
+		return 0.0
+	var k := 1.0 - time_left / cfg.danger_seconds
+	return k * k * (1.0 if info.emergency else cfg.danger_normal_scale)
+
+
 func arrive(patient: PatientInfo) -> void:
 	info = patient
 	time_left = patient.clock
@@ -55,7 +71,8 @@ func arrive(patient: PatientInfo) -> void:
 	body.art_name = patient.body_art
 	body.self_modulate = Game.config.potion_color(patient.cure)
 	bandage.visible = patient.bandaged
-	_set_face("face_calm")
+	_bubble_name = ""
+	_say(SAD_BUBBLES.pick_random(), false)
 	Sfx.play("patient_arrive")
 
 	# Pop up from behind the counter.
@@ -100,25 +117,21 @@ func _process(delta: float) -> void:
 		return
 	_time += delta
 	body.position.y = sin(_time * 2.0) * 5.0
+	# Tremble near the end. Rotation, because the refuse shake tweens position.x.
+	body.rotation = sin(_time * 50.0) * 0.08 * danger()
 	if not active:
 		return
 	time_left -= delta
+	# Sad face turns into "!!!" for the last few seconds (and back if borrowed time lifts it).
+	if is_critical():
+		_say(ALERT_BUBBLE)
+	elif _bubble_name == ALERT_BUBBLE:
+		_say(SAD_BUBBLES.pick_random())
 	if time_left <= 0.0:
 		time_left = 0.0
 		# Out of borrowed time -> bandage and come back worse. Otherwise -> dead.
 		_resolve(Outcome.BANDAGED if info.has_borrowed() and not info.bandaged else Outcome.DIED)
 		return
-	if is_critical():
-		_set_face("face_critical")
-	elif time_left / clock_max <= Game.config.worried_fraction:
-		_set_face("face_worried")
-	else:
-		_set_face("face_calm")
-
-
-func _set_face(art: String) -> void:
-	if face.art_name != art:
-		face.art_name = art
 
 
 func _resolve(result: Outcome, react_delay := 0.0) -> void:
@@ -131,21 +144,23 @@ func _resolve(result: Outcome, react_delay := 0.0) -> void:
 			_move(func(t: Tween):
 				t.tween_interval(react_delay)
 				t.tween_callback(func():
-					_set_face("face_cured")
-					Sfx.play("cure"))
-				t.tween_property(self, "scale", Vector2.ONE * 1.15, 0.12)
+					Sfx.play("cure")
+					_say(HAPPY_BUBBLES.pick_random()))
+				# The cure drains the sickness colour back to the creature's healthy gray.
+				t.tween_property(body, "self_modulate", Game.config.cured_color, 0.3)
+				t.parallel().tween_property(self, "scale", Vector2.ONE * 1.15, 0.12)
 				t.tween_property(self, "scale", Vector2.ONE, 0.15)
 				t.tween_interval(0.25)
 				t.tween_property(self, "position", down, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN))
 		Outcome.BANDAGED:
 			bandage.visible = true
-			_set_face("face_worried")
+			_say(SAD_BUBBLES.pick_random())
 			Sfx.play("bandaged")
 			_move(func(t: Tween):
 				t.tween_interval(0.5)
 				t.tween_property(self, "position", down, 0.6).set_trans(Tween.TRANS_SINE))
 		Outcome.DIED:
-			_set_face("face_dead")
+			bubble.visible = false
 			Sfx.play("death")
 			_move(func(t: Tween):
 				t.tween_interval(0.4)
@@ -155,6 +170,23 @@ func _resolve(result: Outcome, react_delay := 0.0) -> void:
 		visible = false
 		occupied = false
 		gone.emit())
+
+
+## Shows a speech bubble from assets/ui/bubble_<name>.png, with a little pop.
+func _say(bubble_name: String, pop := true) -> void:
+	if bubble_name == _bubble_name:
+		return
+	_bubble_name = bubble_name
+	bubble.art_name = "ui/bubble_" + bubble_name
+	bubble.visible = true
+	if _bubble_tween:
+		_bubble_tween.kill()
+	if not pop:
+		bubble.scale = Vector2.ONE
+		return
+	bubble.scale = Vector2.ONE * 0.6
+	_bubble_tween = create_tween()
+	_bubble_tween.tween_property(bubble, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 
 ## Calls `fn` after `delay` seconds, or right away if there's no delay.

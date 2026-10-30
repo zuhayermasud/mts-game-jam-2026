@@ -1,11 +1,29 @@
 # Godot cache and builds
 .godot/
+.import/
 export/
 build/
+*.translation
 *.tmp
+
+# Raw downloaded asset packs (the used files are copied into assets/)
+Designed downloaded assets/
 
 # Local tool state
 .atlas/
+.firecrawl/
+.claude/settings.local.json
+
+# Python tooling
+__pycache__/
+*.pyc
+.venv/
+
+# Editors
+.vscode/
+.idea/
+*.swp
 
 # macOS
 .DS_Store
+._*

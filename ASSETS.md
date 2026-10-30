@@ -15,22 +15,20 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 ## 1. Game screen
 - [ ] 🎨 Clinic background (kept muted so patients and potions stand out)
 - [ ] 🎨 Counter or workbench
-- [ ] 🎨 Ingredient critters ×3 (red, yellow, blue blobs). Reuse the face set: idle, squeezed, sweating, cheering. Squash and squirt are ⚙️
-- [ ] 🎨 Pot + 🧪 liquid layer, and a burner or flame base under it
-- [ ] 🎨 Spoon (circles in the pot while it boils)
+- [x] 🎨 Ingredient mushroom patch (`critter.png` + greyscale `critter_cap.png`, tinted red, yellow, blue in code). Squash and the fly-into-the-stump arc are ⚙️
+- [x] 🎨 Pot as a hollow tree stump (`pot.png`); the brew colour is drawn in code in the hollow
 - [ ] 🧪 Potion blob (`potion_blob.png`, 36×36, rides on the cursor once pulled and flies to a patient; the arc is ⚙️)
 - [ ] ⚙️ Flame and bubbles
-- [ ] ⚙️ Boil ring: grey weak arc, moving gold band, red arc (pull there = boils over), needle that bounces between the ends with a trail
+- [ ] ⚙️ Boil ring: grey weak arc, gold band (same spot for every brew), red arc (pull there = boils over), needle that bounces between the ends with a trail
 - [ ] Potion name label under the pot ("Green Potion · Perfect!")
 - [ ] 🎨 (on hold) BOTTLE button, shelf with 2 slots, bottle + 🧪 liquid
-- [ ] 🎨 Sink built into the workbench
+- [x] Sink: a green slime right of the pot (`slime.png`, 9-frame 32×32 idle strip drawn at 128×128 by `ArtSprite.frames`; click or V empties the pot, flashes the brew colour)
 - [ ] 🎨 Recipe poster on the wall (R+Y=O, Y+B=G, R+B=P)
 - [ ] 🎨 Recipe book: closed icon and open spread
 - [ ] 🎨 Colour icons ×6 (shape per colour, for colour-blind players)
 
 ## 2. Patients
-- [ ] 🎨 Patient body base ×2–3 silhouettes (🧪 skin tinted to the cure colour)
-- [ ] 🎨 Faces: calm, worried, critical, cured (happy), dead
+- [x] 🎨 Patient bodies: 64 creatures from Hexany's Monster Menagerie (CC0) in `assets/creatures/`, picked at random (🧪 tinted to the cure colour)
 - [ ] 🎨 Boss patient (bigger silhouette)
 - [ ] 🎨 "Came back worse" marker (a bandage or patch)
 - [ ] Top status card per chair (drawn in code for now): cure icon, ailment, clock bar, status line, red outline for emergencies
@@ -41,16 +39,17 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] Score
 - [ ] Shift number
 - [ ] 🧪 Heart icon for lives (×3)
+- [x] Sound toggle (M key, HUD speaker top right, speaker button in the title and pause menus), saved between sessions. `assets/ui/icon_settings` / `icon_sound_on` / `icon_sound_off` are greyscale 3× copies from the Icons_Essential pack (`tools/extract_icons.py`)
 - [ ] Patients cured counter
 - [ ] 🎨 Custom cursor
 
 ## 4. Menus and screens (all use the shared `Theme`)
-- [ ] 🎨 Logo or title wordmark
-- [ ] Title screen: Play, Volume, Credits
+- [x] 🎨 Logo or title wordmark (`assets/ui/logo.png`, "Goblin Doctor", shown above the title scroll)
+- [x] Title screen: Play, Tutorial, Music (Humble Gift scroll, `assets/ui/`)
 - [ ] 🎨 Button style: normal, hover, pressed (9-slice)
 - [ ] Panel or card style (9-slice)
 - [ ] Shift intro card ("Shift 3" plus one line of story)
-- [ ] Pause menu (Esc): music and SFX sliders, Resume, Quit
+- [x] Pause menu (Esc): Continue, Music, Home (Humble Gift panel)
 - [ ] 🎨 Star icons: filled and empty
 - [ ] Game-over screen: shift reached, cured count, best, Retry
 - [ ] Shift 1 hints in the world (arrows or highlights, not text walls)
@@ -63,7 +62,8 @@ Legend: 🎨 draw it · 🧪 one greyscale or white sprite, tinted in code · �
 - [ ] Hover scale-up on everything you can click
 
 ## 6. Audio
-- [ ] SFX: jar pour, flask clear, bubbling (repeats while boiling), "in the gold" ding, boil-over warning rattle, perfect pull chime, overcooked hiss, pull potion, give potion, potion splash (lands on a patient or back in the pot), cure jingle, weak-cure "meh", patient arrives, emergency alarm, clock warning tick, death, shift start, game over, button click
+- [x] SFX, **placeholder** (synthesized by `tools/synth_sfx.py`, replace by saving a real sound under the same name in `audio/`): pour (`pour`), fire lit (`boil_start`), bubbling metronome (`bubble`, ticks on every beat of the needle), "in the gold" ding (`brew_ready`), boil-over warning rattle (`boil_warning`), boil over (`boil_over`), perfect pull chime (`brew_perfect`, pitch rises with the streak), weak pull pop (`pull`), give potion (`give`), potion splash (`splash`), wrong-potion buzz (`refuse`), heartbeat (`heartbeat`), sink drain (`dump`)
+- [ ] SFX still missing: pot full (`pot_full`), cure jingle (`cure`), weak-cure "meh" (`borrow`), patient arrives (`patient_arrive`), emergency alarm (`emergency`), bandaged (`bandaged`), clock warning tick, death (`death`), shift start (`shift_start`), game over (`game_over`), button click
 - [ ] Music: one loop that speeds up or gets more intense as danger rises
 - [ ] Theme cue: a distinct "borrowed time" sound when you give a weak potion
 

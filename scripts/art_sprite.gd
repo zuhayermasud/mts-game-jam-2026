@@ -5,6 +5,8 @@ extends Node2D
 ## Otherwise it draws a grey-box placeholder with the file name written on it.
 ## To swap in real art, drop a 2x PNG with that name into assets/. No code changes needed.
 ## Tint with self_modulate (draw tinted art white or greyscale) so children keep their colours.
+## A horizontal strip of equal frames plays on loop when `frames` > 1, or holds `frame` when
+## `autoplay` is off.
 
 enum Shape { RECT, ROUNDED, ELLIPSE }
 
@@ -20,6 +22,19 @@ const OUTLINE := Color(0.1, 0.08, 0.15)
 	set(value):
 		size = value
 		queue_redraw()
+## Frames side by side in the PNG, played left to right at `fps`.
+@export var frames := 1:
+	set(value):
+		frames = maxi(value, 1)
+		queue_redraw()
+@export var fps := 10.0
+@export var autoplay := true
+@export var frame := 0:
+	set(value):
+		value = clampi(value, 0, frames - 1)
+		if value != frame:
+			frame = value
+			queue_redraw()
 @export var shape := Shape.ROUNDED:
 	set(value):
 		shape = value
@@ -35,6 +50,7 @@ const OUTLINE := Color(0.1, 0.08, 0.15)
 		queue_redraw()
 
 var _texture: Texture2D
+var _time := 0.0
 
 
 func has_art() -> bool:
@@ -48,6 +64,13 @@ func contains_point(global_point: Vector2) -> bool:
 	return Rect2(-size * 0.5, size).has_point(p)
 
 
+func _process(delta: float) -> void:
+	if frames <= 1 or not autoplay or _texture == null:
+		return
+	_time += delta
+	frame = int(_time * fps) % frames
+
+
 func _load_texture() -> void:
 	var path := ASSET_DIR + art_name + ".png"
 	_texture = load(path) if art_name != "" and ResourceLoader.exists(path) else null
@@ -57,7 +80,12 @@ func _load_texture() -> void:
 func _draw() -> void:
 	var rect := Rect2(-size * 0.5, size)
 	if _texture:
-		draw_texture_rect(_texture, rect, false)
+		if frames > 1:
+			var w := _texture.get_width() / float(frames)
+			var src := Rect2(w * frame, 0, w, _texture.get_height())
+			draw_texture_rect_region(_texture, rect, src)
+		else:
+			draw_texture_rect(_texture, rect, false)
 		return
 	match shape:
 		Shape.RECT:

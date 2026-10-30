@@ -4,11 +4,20 @@
 [ext_resource type="Script" path="res://scripts/art_sprite.gd" id="2_art"]
 
 [node name="Critter" type="Node2D" node_paths=PackedStringArray("hit")]
+texture_filter = 1
 script = ExtResource("1_critter")
 hit = NodePath("Body")
+hover_scale = 1.0
 
 [node name="Body" type="Node2D" parent="."]
 script = ExtResource("2_art")
-art_name = "critter_red"
-size = Vector2(130, 115)
+art_name = "critter"
+size = Vector2(128, 128)
 shape = 2
+
+[node name="Cap" type="Node2D" parent="Body"]
+script = ExtResource("2_art")
+art_name = "critter_cap"
+size = Vector2(128, 128)
+shape = 2
+show_name = false

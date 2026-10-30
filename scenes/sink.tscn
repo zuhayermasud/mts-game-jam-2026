@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/sink.gd" id="1_sink"]
+[ext_resource type="Script" path="res://scripts/art_sprite.gd" id="2_art"]
+
+[node name="Sink" type="Node2D" node_paths=PackedStringArray("hit")]
+script = ExtResource("1_sink")
+hit = NodePath("Body")
+
+[node name="Body" type="Node2D" parent="."]
+script = ExtResource("2_art")
+texture_filter = 1
+art_name = "slime"
+size = Vector2(128, 128)
+frames = 9
+placeholder_color = Color(0.55, 0.62, 0.68, 1)

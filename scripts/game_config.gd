@@ -4,16 +4,30 @@ extends Resource
 ## res://config/game_config.tres in the Inspector. Read them in code through Game.config.
 
 @export_group("Brewing")
-## Heat is seconds on the boil since the last pour (the pot boils by itself).
-## The needle sweeps out along the ring in sweep_time seconds, bounces off the red end and
-## sweeps back, then bounces off the start, passing the same zones on every sweep.
+## Heat is seconds on the boil since the fire lit. The fire lights itself boil_delay seconds
+## after the last pour (a second pour in time restarts the count-in).
+## The needle sweeps out along the bar in sweep_time seconds at a constant speed, bounces off
+## the red end and sweeps back, then bounces off the start, passing the same zones on every sweep.
 ## Pulling before weak_from (first sweep only) does nothing: it's still raw.
+@export var boil_delay := 0.4
 @export var weak_from := 0.2
 @export var sweep_time := 1.6
-## The gold (perfect) band starts anywhere in this range of the sweep, rolled fresh on every pour.
+## How fast the needle runs. All the brewing times here are in needle seconds, so 1.15 plays
+## the whole sweep (beat, band and grace included) 15% faster in real time.
+@export var needle_speed := 1.15
+## The bubble ticks every `beat` seconds of needle travel: 4 ticks a sweep, so the gold is
+## something you can time by ear.
+@export var beat := 0.4
+## Where the gold (perfect) band starts along the sweep, the same for every brew: the third beat
+## (the boil starting is the first, then two bubbles). Adding a second colour only narrows it.
 ## It's clamped so it always ends before the red section.
-@export var band_start_min := 0.4
-@export var band_start_max := 1.0
+@export var band_start := 0.8
+## Hidden slack around the gold band when pulling, in seconds of needle travel. Wider on the late
+## side because browser audio lags, so players timing by ear pull a little late.
+@export var band_grace_early := 0.03
+@export var band_grace_late := 0.07
+## A weak pull within this many seconds outside the grace says "So close!".
+@export var near_miss := 0.08
 ## Band width in seconds of boiling on shift 1. Secondaries get the narrower one.
 @export var band_width_primary := 0.25
 @export var band_width_secondary := 0.2
@@ -33,12 +47,17 @@ extends Resource
 @export var wrong_serve_penalty := 2.0
 ## Under this many seconds the patient looks critical and the clock flashes.
 @export var critical_seconds := 4.0
-## Under this fraction of the clock the patient looks worried.
-@export var worried_fraction := 0.5
 ## A bandaged patient rejoins the queue after this many other patients.
 @export var bandage_return_after := 2
 ## Clock multiplier for a bandaged patient who can't go up a tier.
 @export var bandage_clock_multiplier := 0.8
+## In a patient's last danger_seconds the screen goes red, shakes and a heartbeat speeds up.
+## Emergencies get the full effect, normal patients danger_normal_scale of it.
+@export var danger_seconds := 2.5
+@export var danger_normal_scale := 0.6
+## Seconds between heartbeats as danger starts and at its peak.
+@export var heartbeat_slow := 0.6
+@export var heartbeat_fast := 0.22
 @export var ailments: PackedStringArray = [
 	"Quantum hiccups", "Gravity cramps", "Nebula sniffles", "Space jelly knees",
 	"Comet cough", "Antenna droop", "Moon pox", "Zero-G gurgles",
@@ -57,6 +76,7 @@ extends Resource
 ## Chairs open at once (max 3). All their clocks tick together.
 @export var shift_chairs: PackedInt32Array = [1, 2, 3, 3]
 ## Chance that a patient is an emergency, on the short emergency clock.
+## Emergencies always need a primary, so one pour (after the sink) gets them a weak dose.
 @export var emergency_chance: PackedFloat32Array = [0.0, 0.15, 0.25, 0.3]
 @export var emergency_clock := 7.0
 @export var later_shift_extra_patients := 1
@@ -72,6 +92,9 @@ extends Resource
 @export var score_after_borrow := 50
 @export var score_per_second_left := 5
 @export var score_wrong := -25
+## Perfect cures in a row: each one after the first adds streak_bonus more, up to streak_bonus_max.
+@export var streak_bonus := 25
+@export var streak_bonus_max := 100
 
 @export_group("Potion colours")
 @export var red := Color("e8413c")
@@ -80,6 +103,8 @@ extends Resource
 @export var orange := Color("f2872c")
 @export var green := Color("4cc552")
 @export var purple := Color("9b4fd6")
+## A cured patient fades back to this healthy colour as they leave.
+@export var cured_color := Color("8c8c94")
 
 
 func potion_color(kind: int) -> Color:
