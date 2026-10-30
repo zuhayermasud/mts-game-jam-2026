@@ -8,7 +8,9 @@ signal finished
 const DIR := "res://assets/intro/cave_%d.png"
 const LAYERS := 8
 const SIZE := Vector2(720, 900)
-const SHOW_TIME := 3.0
+const SHOW_TIME := 2.0
+## Screen pixels per texture pixel. 4.17 fills the height; lower zooms out to show more cave.
+const ZOOM := 3.0
 const FADE_TIME := 0.6
 ## Texture pixels per second of the nearest layer. Farther layers crawl slower.
 const FRONT_SPEED := 60.0
@@ -30,9 +32,14 @@ func _ready() -> void:
 		s.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		s.region_enabled = true
-		var k := SIZE.y / tex.get_height()
+		var k := ZOOM
 		s.scale = Vector2(k, k)
 		s.region_rect = Rect2(Vector2.ZERO, Vector2(SIZE.x / k, tex.get_height()))
+		s.position.y = (SIZE.y - tex.get_height() * k) * 0.5
+		if i == LAYERS - 1:  # the flat back wall fills the whole screen, above and below the rest
+			s.scale = Vector2(k, SIZE.y / tex.get_height())
+			s.position.y = 0.0
+			s.region_rect = Rect2(Vector2.ZERO, Vector2(SIZE.x / k, tex.get_height()))
 		add_child(s)
 		_sprites.append(s)
 	_black = ColorRect.new()
